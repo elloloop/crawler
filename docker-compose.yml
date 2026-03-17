@@ -1,0 +1,41 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+
+  crawler:
+    build: .
+    depends_on:
+      - redis
+      - minio
+    ports:
+      - "50051:50051"
+    environment:
+      CRAWLER_MODE: distributed
+      CRAWLER_GRPC_PORT: "50051"
+      CRAWLER_WORKERS: "8"
+      CRAWLER_DATA_DIR: /data
+      REDIS_ADDR: redis:6379
+      R2_ENDPOINT: http://minio:9000
+      R2_ACCESS_KEY_ID: minioadmin
+      R2_ACCESS_KEY_SECRET: minioadmin
+      R2_BUCKET: crawler-data
+
+volumes:
+  redis-data:
+  minio-data:

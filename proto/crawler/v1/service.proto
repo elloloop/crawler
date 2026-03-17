@@ -1,0 +1,207 @@
+syntax = "proto3";
+
+package crawler.v1;
+
+import "crawler/v1/models.proto";
+
+// ProjectService manages crawl projects.
+service ProjectService {
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
+}
+
+// CrawlService manages crawl jobs and results.
+service CrawlService {
+  rpc StartCrawl(StartCrawlRequest) returns (StartCrawlResponse);
+  rpc StopCrawl(StopCrawlRequest) returns (StopCrawlResponse);
+  rpc PauseCrawl(PauseCrawlRequest) returns (PauseCrawlResponse);
+  rpc ResumeCrawl(ResumeCrawlRequest) returns (ResumeCrawlResponse);
+  rpc GetCrawlStatus(GetCrawlStatusRequest) returns (GetCrawlStatusResponse);
+  rpc ListCrawls(ListCrawlsRequest) returns (ListCrawlsResponse);
+  rpc GetCrawlStats(GetCrawlStatsRequest) returns (GetCrawlStatsResponse);
+  rpc ListPages(ListPagesRequest) returns (ListPagesResponse);
+  rpc GetPage(GetPageRequest) returns (GetPageResponse);
+  rpc ExportPages(ExportPagesRequest) returns (stream ExportPagesResponse);
+}
+
+// RateLimitService configures per-domain rate limits at runtime.
+service RateLimitService {
+  rpc SetDomainRateLimit(SetDomainRateLimitRequest) returns (SetDomainRateLimitResponse);
+  rpc GetDomainRateLimit(GetDomainRateLimitRequest) returns (GetDomainRateLimitResponse);
+  rpc ListDomainRateLimits(ListDomainRateLimitsRequest) returns (ListDomainRateLimitsResponse);
+  rpc ResetDomainRateLimit(ResetDomainRateLimitRequest) returns (ResetDomainRateLimitResponse);
+}
+
+// RobotsService manages cached robots.txt data.
+service RobotsService {
+  rpc GetRobotsInfo(GetRobotsInfoRequest) returns (GetRobotsInfoResponse);
+  rpc RefreshRobots(RefreshRobotsRequest) returns (RefreshRobotsResponse);
+  rpc ListCachedRobots(ListCachedRobotsRequest) returns (ListCachedRobotsResponse);
+}
+
+// --- ProjectService messages ---
+
+message CreateProjectRequest {
+  string name = 1;
+  string description = 2;
+  CrawlConfig default_config = 3;
+  repeated SiteConfig site_configs = 4;
+}
+message CreateProjectResponse {
+  Project project = 1;
+}
+
+message GetProjectRequest {
+  string id = 1;
+}
+message GetProjectResponse {
+  Project project = 1;
+}
+
+message ListProjectsRequest {}
+message ListProjectsResponse {
+  repeated Project projects = 1;
+}
+
+message UpdateProjectRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  CrawlConfig default_config = 4;
+  repeated SiteConfig site_configs = 5;
+}
+message UpdateProjectResponse {
+  Project project = 1;
+}
+
+message DeleteProjectRequest {
+  string id = 1;
+}
+message DeleteProjectResponse {}
+
+// --- CrawlService messages ---
+
+message StartCrawlRequest {
+  string project_id = 1;
+  CrawlConfig config_override = 2;
+}
+message StartCrawlResponse {
+  CrawlJob job = 1;
+}
+
+message StopCrawlRequest {
+  string crawl_id = 1;
+}
+message StopCrawlResponse {
+  CrawlJob job = 1;
+}
+
+message PauseCrawlRequest {
+  string crawl_id = 1;
+}
+message PauseCrawlResponse {
+  CrawlJob job = 1;
+}
+
+message ResumeCrawlRequest {
+  string crawl_id = 1;
+}
+message ResumeCrawlResponse {
+  CrawlJob job = 1;
+}
+
+message GetCrawlStatusRequest {
+  string crawl_id = 1;
+}
+message GetCrawlStatusResponse {
+  CrawlJob job = 1;
+}
+
+message ListCrawlsRequest {
+  string project_id = 1;
+}
+message ListCrawlsResponse {
+  repeated CrawlJob jobs = 1;
+}
+
+message GetCrawlStatsRequest {
+  string crawl_id = 1;
+}
+message GetCrawlStatsResponse {
+  CrawlStats stats = 1;
+}
+
+message ListPagesRequest {
+  string crawl_id = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+message ListPagesResponse {
+  repeated Page pages = 1;
+  string next_page_token = 2;
+}
+
+message GetPageRequest {
+  string crawl_id = 1;
+  string url = 2;
+}
+message GetPageResponse {
+  Page page = 1;
+}
+
+message ExportPagesRequest {
+  string crawl_id = 1;
+}
+message ExportPagesResponse {
+  Page page = 1;
+}
+
+// --- RateLimitService messages ---
+
+message SetDomainRateLimitRequest {
+  DomainRateLimit rate_limit = 1;
+}
+message SetDomainRateLimitResponse {
+  DomainRateLimit rate_limit = 1;
+}
+
+message GetDomainRateLimitRequest {
+  string domain = 1;
+}
+message GetDomainRateLimitResponse {
+  DomainRateLimit rate_limit = 1;
+}
+
+message ListDomainRateLimitsRequest {}
+message ListDomainRateLimitsResponse {
+  repeated DomainRateLimit rate_limits = 1;
+}
+
+message ResetDomainRateLimitRequest {
+  string domain = 1;
+}
+message ResetDomainRateLimitResponse {}
+
+// --- RobotsService messages ---
+
+message GetRobotsInfoRequest {
+  string domain = 1;
+}
+message GetRobotsInfoResponse {
+  RobotsInfo info = 1;
+}
+
+message RefreshRobotsRequest {
+  string domain = 1;
+}
+message RefreshRobotsResponse {
+  RobotsInfo info = 1;
+}
+
+message ListCachedRobotsRequest {}
+message ListCachedRobotsResponse {
+  repeated RobotsInfo robots = 1;
+}

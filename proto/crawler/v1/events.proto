@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package crawler.v1;
+
+import "google/protobuf/timestamp.proto";
+import "crawler/v1/types.proto";
+
+// URLFrontierEvent is pushed to the work queue for workers to process.
+message URLFrontierEvent {
+  string url = 1;
+  int32 depth = 2;
+  string project_id = 3;
+  string crawl_id = 4;
+  int32 priority = 5;
+  int32 retry_count = 6;
+  string discovered_from = 7;
+  CrawlStrategy strategy = 8;
+}
+
+// PageCrawledEvent is produced after a page is successfully fetched and parsed.
+message PageCrawledEvent {
+  string url = 1;
+  string final_url = 2;
+  int32 status_code = 3;
+  string content_ref = 4;
+  repeated string links = 5;
+  int32 depth = 6;
+  string project_id = 7;
+  string crawl_id = 8;
+  string content_hash = 9;
+  google.protobuf.Timestamp crawled_at = 10;
+}
+
+// CrawlStatusEvent is emitted when a crawl job changes state.
+message CrawlStatusEvent {
+  string crawl_id = 1;
+  string project_id = 2;
+  CrawlStatus status = 3;
+  int64 pages_crawled = 4;
+  int64 pages_failed = 5;
+  int64 urls_queued = 6;
+  google.protobuf.Timestamp timestamp = 7;
+}
+
+// URLFailedEvent is produced when a URL fetch fails after retries.
+message URLFailedEvent {
+  string url = 1;
+  string error = 2;
+  int32 retry_count = 3;
+  string project_id = 4;
+  string crawl_id = 5;
+  int32 status_code = 6;
+  google.protobuf.Timestamp failed_at = 7;
+}

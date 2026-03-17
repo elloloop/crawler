@@ -1,17 +1,33 @@
-__pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-dist/
-build/
-.eggs/
-*.egg
-.venv/
-venv/
-env/
+# Binaries
+/crawler
+/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test
+*.test
+*.out
+coverage.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
 .env
+.env.*
+
+# Data
+/data/
 *.jsonl
-*.log
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
+
+# Generated code is committed
+# gen/

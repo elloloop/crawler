@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package crawler.v1;
+
+import "google/protobuf/timestamp.proto";
+import "crawler/v1/types.proto";
+
+message Project {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  CrawlConfig default_config = 4;
+  repeated SiteConfig site_configs = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message SiteConfig {
+  string domain = 1;
+  CrawlStrategy strategy = 2;
+  DomainRateLimit rate_limit = 3;
+  string dump_url = 4;
+  string user_agent_override = 5;
+}
+
+message CrawlConfig {
+  repeated string seed_urls = 1;
+  CrawlStrategy strategy = 2;
+  int32 max_depth = 3;
+  int32 max_pages = 4;
+  int32 concurrency = 5;
+  double delay_seconds = 6;
+  bool stay_on_domain = 7;
+  string user_agent = 8;
+  repeated string include_patterns = 9;
+  repeated string exclude_patterns = 10;
+}
+
+message CrawlJob {
+  string id = 1;
+  string project_id = 2;
+  CrawlConfig config = 3;
+  CrawlStatus status = 4;
+  CrawlStats stats = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp completed_at = 7;
+}
+
+message CrawlStats {
+  int64 pages_crawled = 1;
+  int64 pages_failed = 2;
+  int64 pages_skipped = 3;
+  int64 urls_discovered = 4;
+  int64 urls_queued = 5;
+  int64 bytes_downloaded = 6;
+  int64 duration_ms = 7;
+}
+
+message Page {
+  string url = 1;
+  string final_url = 2;
+  int32 status_code = 3;
+  string title = 4;
+  string text = 5;
+  repeated string links = 6;
+  string meta_description = 7;
+  string canonical_url = 8;
+  string content_hash = 9;
+  int32 depth = 10;
+  google.protobuf.Timestamp crawled_at = 11;
+  string project_id = 12;
+  string crawl_id = 13;
+}
+
+message RobotsInfo {
+  string domain = 1;
+  repeated string disallowed_paths = 2;
+  repeated string allowed_paths = 3;
+  double crawl_delay = 4;
+  repeated string sitemaps = 5;
+  google.protobuf.Timestamp fetched_at = 6;
+}
+
+message DomainRateLimit {
+  string domain = 1;
+  double requests_per_second = 2;
+  double requests_per_minute = 3;
+  int32 max_concurrent = 4;
+  int32 burst_size = 5;
+}
