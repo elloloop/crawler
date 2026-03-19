@@ -1,0 +1,187 @@
+{
+  "ott_platforms": [
+    {
+      "name": "aha",
+      "domain": "www.aha.video",
+      "url": "https://www.aha.video",
+      "languages": ["te", "ta"],
+      "country": "IN",
+      "sitemap": "https://www.aha.video/sitemap/sitemapindex.xml",
+      "robots_txt": "https://www.aha.video/robots.txt",
+      "content_types": ["movie", "webseries", "webepisode"],
+      "structured_data": "json-ld (schema.org/VideoObject)",
+      "crawl_strategy": {
+        "method": "sitemap + polite",
+        "tool": "ottcrawl -platform aha",
+        "user_agent": "CrawlerBot/0.1",
+        "rate_limit": "3 req/s",
+        "data_extraction": "JSON-LD for movies (title, description, genre, year, cast, thumbnail). og:image for banner on all pages.",
+        "notes": "Language only available on movie pages (39%), not episodes. Episodes classified as 'show' via og:section meta."
+      },
+      "crawl_results": {
+        "last_crawled": "2026-03-19",
+        "movies": 1632,
+        "shows": 2938,
+        "webseries": 2,
+        "total": 4572,
+        "thumbnail_coverage": "100%",
+        "banner_coverage": "100%",
+        "failures": 0,
+        "output": "data/ott/aha.jsonl",
+        "r2_key": "ott/aha.jsonl"
+      },
+      "status": "done"
+    },
+    {
+      "name": "Hotstar (JioHotstar)",
+      "domain": "www.hotstar.com",
+      "url": "https://www.hotstar.com",
+      "languages": ["hi", "te", "ta", "ml", "kn", "bn", "mr", "en"],
+      "country": "IN",
+      "sitemap": "https://www.hotstar.com/in/new-sitemap.xml",
+      "robots_txt": "https://www.hotstar.com/robots.txt",
+      "content_types": ["movie", "show", "episode", "sport"],
+      "structured_data": "json-ld (schema.org/Movie, schema.org/TVSeries) — only served to Googlebot UA",
+      "crawl_strategy": {
+        "method": "sitemap URLs pre-fetched via curl (CDN caching issues with Go client), then crawled with urls-file",
+        "tool": "ottcrawl -platform hotstar -urls-file <pre-fetched-urls>",
+        "user_agent": "Googlebot/2.1 (required for SSR/JSON-LD)",
+        "rate_limit": "5 req/s",
+        "data_extraction": "JSON-LD has title, description, genre, year, language, duration, age_rating, thumbnail, image. Very clean structured data.",
+        "notes": "CDN (Akamai) caches sitemaps aggressively — sub-sitemaps sometimes return wrong content. Workaround: fetch sitemap URLs with curl (which gets correct response), save to file, then use -urls-file flag. Pages only serve JSON-LD to Googlebot UA; regular UA gets JS-rendered HTML with no structured data.",
+        "sitemap_sub_urls": {
+          "movies": "https://www.hotstar.com/in/new-sitemap-MOVIE-1.xml",
+          "shows": "https://www.hotstar.com/in/new-sitemap-SHOWS-1.xml",
+          "episodes": "https://www.hotstar.com/in/new-sitemap-EPISODE-{1..10}.xml"
+        }
+      },
+      "crawl_results": {
+        "last_crawled": "2026-03-19",
+        "movies": 6368,
+        "shows": 4791,
+        "total": 11159,
+        "thumbnail_coverage": "100%",
+        "banner_coverage": "100%",
+        "language_coverage": "100%",
+        "failures": 0,
+        "output": "data/ott/hotstar.jsonl",
+        "r2_key": "ott/hotstar.jsonl"
+      },
+      "status": "done"
+    },
+    {
+      "name": "Netflix",
+      "domain": "www.netflix.com",
+      "url": "https://www.netflix.com",
+      "languages": ["multi"],
+      "country": "US",
+      "sitemap": "",
+      "content_types": ["movie", "show"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — likely needs API or headless browser. Netflix heavily blocks crawlers.",
+        "notes": "Consider using uNoGS API or TMDB Netflix provider filter as alternative."
+      },
+      "status": "planned"
+    },
+    {
+      "name": "Amazon Prime Video",
+      "domain": "www.primevideo.com",
+      "url": "https://www.primevideo.com",
+      "languages": ["multi"],
+      "country": "US",
+      "sitemap": "",
+      "content_types": ["movie", "show"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — needs investigation. May have sitemaps or API.",
+        "notes": "Consider JustWatch API as alternative data source."
+      },
+      "status": "planned"
+    },
+    {
+      "name": "ZEE5",
+      "domain": "www.zee5.com",
+      "url": "https://www.zee5.com",
+      "languages": ["hi", "te", "ta", "ml", "kn", "bn", "mr", "en"],
+      "country": "IN",
+      "sitemap": "",
+      "content_types": ["movie", "show", "original"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — check robots.txt and sitemap availability"
+      },
+      "status": "planned"
+    },
+    {
+      "name": "SonyLIV",
+      "domain": "www.sonyliv.com",
+      "url": "https://www.sonyliv.com",
+      "languages": ["hi", "te", "ta", "ml", "en"],
+      "country": "IN",
+      "sitemap": "",
+      "content_types": ["movie", "show", "sport"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — check robots.txt and sitemap availability"
+      },
+      "status": "planned"
+    },
+    {
+      "name": "JioCinema",
+      "domain": "www.jiocinema.com",
+      "url": "https://www.jiocinema.com",
+      "languages": ["hi", "te", "ta", "ml", "kn", "en"],
+      "country": "IN",
+      "sitemap": "",
+      "content_types": ["movie", "show", "sport"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — check robots.txt and sitemap availability"
+      },
+      "status": "planned"
+    },
+    {
+      "name": "MX Player",
+      "domain": "www.mxplayer.in",
+      "url": "https://www.mxplayer.in",
+      "languages": ["hi", "te", "ta", "en"],
+      "country": "IN",
+      "sitemap": "",
+      "content_types": ["movie", "show", "music"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — check robots.txt and sitemap availability"
+      },
+      "status": "planned"
+    },
+    {
+      "name": "ETV Win",
+      "domain": "www.etvwin.com",
+      "url": "https://www.etvwin.com",
+      "languages": ["te"],
+      "country": "IN",
+      "sitemap": "",
+      "content_types": ["movie", "show"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — check robots.txt and sitemap availability"
+      },
+      "status": "planned"
+    },
+    {
+      "name": "Sun NXT",
+      "domain": "www.sunnxt.com",
+      "url": "https://www.sunnxt.com",
+      "languages": ["te", "ta", "ml", "kn"],
+      "country": "IN",
+      "sitemap": "",
+      "content_types": ["movie", "show"],
+      "structured_data": "unknown",
+      "crawl_strategy": {
+        "method": "TBD — check robots.txt and sitemap availability"
+      },
+      "status": "planned"
+    }
+  ]
+}

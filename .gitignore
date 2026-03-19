@@ -25,9 +25,14 @@ Thumbs.db
 .env
 .env.*
 
-# Data
-/data/
+# Data (crawled output, not config)
+/data/wiki/
+/data/imdb/
+/data/movies/
+/data/tmdb/
+/data/enriched/
 *.jsonl
+!data/ott/registry.json
 
 # Generated code is committed
 # gen/
