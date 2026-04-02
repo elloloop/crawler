@@ -1,0 +1,459 @@
+{
+  "probe_date": "2026-04-03",
+  "platforms": {
+    "mubi.com": {
+      "description": "Global arthouse cinema streaming",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://mubi.com/robots.txt",
+        "crawl_delay": 5,
+        "notable_disallows": ["/login", "/search", "/users/", "*/films/*/awards", "*/awards-and-festivals/"],
+        "notable_allows": ["awards-and-festivals for major festivals (Venice, Cannes, Oscars, etc.)"]
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://feeds.mubi.com/sitemap.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 18,
+        "content_types": ["films (15 shards x ~10000 URLs)", "series (1 shard)", "images (1 shard)"],
+        "estimated_total_urls": "~150000+",
+        "last_modified": "2026-04-02"
+      },
+      "json_ld": {
+        "present": false,
+        "notes": "No JSON-LD found on film pages via curl. Content rendered via Next.js SSR with __NEXT_DATA__ but no explicit ld+json script tags."
+      },
+      "ssr": {
+        "googlebot_ssr": true,
+        "framework": "Next.js",
+        "evidence": "__NEXT_DATA__ and meta description present for both normal and Googlebot UAs",
+        "title_rendered": false,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "Sitemap-first via feeds.mubi.com/sitemap.xml. Respect 5s crawl-delay. Use film sub-sitemaps for content URLs. SSR content available without JS rendering. No JSON-LD but rich meta tags. Estimated 150k+ film pages across 15 shards."
+    },
+    "viki.com": {
+      "description": "Asian drama streaming (Rakuten Viki)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.viki.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/outbound", "/player", "/search", "/users/", "/explore"],
+        "notable_allows": ["/.well-known/"]
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "http://www.viki.com/sitemap.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 7,
+        "content_types": ["homepage", "misc", "categories", "collections", "tv (~1871 URLs)", "movies", "celebrities"],
+        "additional_sitemaps": ["https://s3.amazonaws.com/assets.viki-production/outbound_feeds/google_cast/production_google_cast_feed_sitemap.xml"],
+        "estimated_total_urls": "~5000+",
+        "last_modified": "2026-04-02"
+      },
+      "json_ld": {
+        "present": true,
+        "types_found": ["TVSeries", "BreadcrumbList"],
+        "schema_quality": "excellent",
+        "notes": "Rich TVSeries JSON-LD with aggregateRating, genre, actors, countryOfOrigin. BreadcrumbList for navigation."
+      },
+      "ssr": {
+        "googlebot_ssr": true,
+        "framework": "Next.js",
+        "evidence": "Full SSR with __NEXT_DATA__, title, meta description, and JSON-LD all rendered server-side",
+        "title_rendered": true,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "Excellent crawlability. Sitemap-driven with rich JSON-LD on content pages. TV sitemap has ~1871 show URLs. Full SSR via Next.js. Parse JSON-LD for structured metadata (ratings, cast, genres). No crawl-delay specified."
+    },
+    "crunchyroll.com": {
+      "description": "Anime streaming",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.crunchyroll.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/showtag", "*/search", "/user", "/vilos/", "/store/", "*/account", "*/watchlist", "*/history"]
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://www.crunchyroll.com/sitemap.xml",
+        "type": "declared_but_blocked",
+        "sub_sitemaps": null,
+        "content_types": [],
+        "estimated_total_urls": "unknown",
+        "notes": "Both sitemap URLs declared in robots.txt but Cloudflare challenge blocks all curl/bot access"
+      },
+      "json_ld": {
+        "present": "unknown",
+        "notes": "Cannot verify - Cloudflare bot protection blocks all non-browser requests including Googlebot UA"
+      },
+      "ssr": {
+        "googlebot_ssr": "blocked",
+        "framework": "unknown",
+        "evidence": "Cloudflare 'Just a moment...' challenge returned for all UAs including Googlebot",
+        "title_rendered": false,
+        "meta_description_rendered": false
+      },
+      "recommended_crawl_strategy": "Highly restrictive. Cloudflare bot protection blocks all programmatic access. Would require headless browser with Cloudflare bypass. Consider using their public API if available, or scraping cached Google results. Most difficult platform to crawl in this set."
+    },
+    "nowtv.com": {
+      "description": "UK streaming (Sky/NOW)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.nowtv.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/account", "/widgets", "/gb/", "/preview/"],
+        "notable_allows": ["/gb/help"],
+        "bot_specific": {"msnbot": {"crawl_delay": 10}, "MauiBot": {"disallow_all": true}}
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://www.nowtv.com/sitemap.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 29,
+        "content_types": ["published", "content_page_entertainment_gb (3 shards)", "content_page_entertainment_ie (3 shards)", "content_page_movies_gb", "content_page_movies_ie", "content_page_kids_gb (2 shards)", "content_page_kids_ie (2 shards)", "content_page_hayu_gb (2 shards)", "content_page_hayu_ie (2 shards)", "custom_widget (2 shards)", "channels_gb", "channels_ie", "content_page_hbomax_gb (3 shards)", "content_page_hbomax_ie (3 shards)", "help sitemaps"],
+        "estimated_total_urls": "~10000+ per major shard, ~50000+ total",
+        "notes": "Entertainment gb-0 shard alone has 10000 URLs. Includes hreflang alternates for GB/IE."
+      },
+      "json_ld": {
+        "present": true,
+        "types_found": ["TVSeries"],
+        "schema_quality": "good",
+        "notes": "JSON-LD with @graph containing TVSeries type. Present with both normal and Googlebot UAs."
+      },
+      "ssr": {
+        "googlebot_ssr": true,
+        "framework": "React (custom SSR)",
+        "evidence": "Full SSR with title, JSON-LD rendered server-side. Content-rich HTML in response.",
+        "title_rendered": true,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "Excellent crawlability. Large sitemap index with well-organized content shards by region and category. Full SSR with JSON-LD (TVSeries). Start with entertainment and movies sitemaps. Respect hreflang for GB/IE variants."
+    },
+    "britbox.com": {
+      "description": "British TV streaming (UK/US/CA/AU)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.britbox.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/us/account/", "/ca/account/", "/za/account/", "/au/account/", "/se/account/", "/dk/account/", "/no/account/", "/fi/account/", "/api/account/"]
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://www.britbox.com/sitemap.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 2,
+        "content_types": ["static-sitemap (2 URLs)", "dynamic-sitemap (~13354 URLs)"],
+        "estimated_total_urls": "~13356",
+        "notes": "Dynamic sitemap contains show/content URLs with hreflang alternates for en, en-ca, en-us"
+      },
+      "json_ld": {
+        "present": false,
+        "notes": "No JSON-LD found. Geo-restricted - returns 'Location not Supported' from non-UK/US IPs. Has meta description tag."
+      },
+      "ssr": {
+        "googlebot_ssr": "partial",
+        "framework": "custom",
+        "evidence": "Returns title and meta description but geo-blocks content. Show pages return 'Location not Supported' or 'Page not found' from outside supported regions.",
+        "title_rendered": true,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "Sitemap-driven with 13k+ content URLs in dynamic sitemap. Geo-restriction is main obstacle - need UK/US proxy for content pages. No JSON-LD. Parse hreflang variants from sitemap for multi-region content."
+    },
+    "stan.com.au": {
+      "description": "Australian streaming service",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.stan.com.au/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["none (fully open)"],
+        "notes": "Minimal robots.txt with 'Disallow:' (empty = allow all)"
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://www.stan.com.au/sitemap.xml",
+        "type": "urlset",
+        "sub_sitemaps": 0,
+        "content_types": ["landing pages, login, legal, sport, promos"],
+        "estimated_total_urls": 26,
+        "notes": "Very small sitemap with only top-level pages. No individual show/movie URLs in sitemap."
+      },
+      "json_ld": {
+        "present": false,
+        "notes": "No JSON-LD found on homepage. Minimal SSR content."
+      },
+      "ssr": {
+        "googlebot_ssr": "minimal",
+        "framework": "SPA (noscript tag present suggesting client-side rendering)",
+        "evidence": "Title rendered but no meta description or structured content in HTML. Likely relies on client-side rendering.",
+        "title_rendered": true,
+        "meta_description_rendered": false
+      },
+      "recommended_crawl_strategy": "Poor crawlability. Tiny sitemap (26 URLs) with no content pages. SPA-style rendering. No JSON-LD. Would need headless browser to render content pages and discover show/movie URLs through navigation. Consider API discovery or Google cache scraping."
+    },
+    "crave.ca": {
+      "description": "Canadian streaming (Bell Media)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.crave.ca/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/*?ua=*", "/en/debug", "/fr/debug", "/en/cravings/", "/en/profiles/", "/en/settings/", "/en/search/"]
+      },
+      "sitemap": {
+        "exists": true,
+        "urls": ["https://www.crave.ca/sitemap.xml", "https://www.crave.ca/sitemap-article.xml"],
+        "type": "sitemap_index",
+        "sub_sitemaps": 277,
+        "content_types": ["crave-content-sitemap (277 shards x ~500 URLs each)"],
+        "estimated_total_urls": "~138500",
+        "notes": "Large sitemap with 277 content shards. Bilingual (en/fr) content."
+      },
+      "json_ld": {
+        "present": false,
+        "notes": "No JSON-LD found. Client-side rendered SPA with React (id='root')."
+      },
+      "ssr": {
+        "googlebot_ssr": false,
+        "framework": "React SPA",
+        "evidence": "Only id='root' div found in HTML response - pure client-side rendering. No title, no meta description, no structured data in initial HTML.",
+        "title_rendered": false,
+        "meta_description_rendered": false
+      },
+      "recommended_crawl_strategy": "Sitemap provides massive URL inventory (~138k URLs). However, pages are pure client-side SPA (React) with no SSR. Must use headless browser for content extraction. No JSON-LD. Sitemap is the primary discovery mechanism."
+    },
+    "shahid.mbc.net": {
+      "description": "Middle East streaming (MBC Group)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://shahid.mbc.net/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["Default blocks all bots, then explicitly allows major search engine bots (Googlebot, Bingbot, Applebot, etc.)"],
+        "notes": "Disallow: / for User-agent: * but Allow: / for named bots. Blocks logout and payment pages."
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://shahid.mbc.net/sitemap.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 32,
+        "content_types": ["livestream (ar/en)", "movies (ar/en, ~1538 URLs each)", "shows-episodes (6 ar shards x 10000, 6+ en shards)"],
+        "estimated_total_urls": "~100000+",
+        "notes": "Bilingual ar/en content. Episode-level granularity. Movies sitemap has ~1538 URLs. Episode shards have up to 10000 URLs each."
+      },
+      "json_ld": {
+        "present": true,
+        "types_found": ["Movie/TVSeries (inferred from rich meta)"],
+        "schema_quality": "good",
+        "notes": "JSON-LD present on movie pages. Rich meta tags including og:url, twitter:card, canonical links, and hreflang for ar/en/fr."
+      },
+      "ssr": {
+        "googlebot_ssr": true,
+        "framework": "Next.js",
+        "evidence": "__NEXT_DATA__ present, meta description and JSON-LD rendered server-side for both normal and Googlebot UAs. Full content titles like 'Watch The Comeback Trial - MBC Shahid'.",
+        "title_rendered": true,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "Good crawlability for named bots. Use Googlebot UA or similar recognized bot. Sitemap provides ~100k+ URLs across movies and episode-level content. Full Next.js SSR with JSON-LD. Bilingual ar/en content. Respect robot selective access pattern."
+    },
+    "viu.com": {
+      "description": "SE Asian streaming (PCCW/Viu)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.viu.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/api/container/", "*entry=*", "*keyword=*", "*/misc/error/*", "*/director*", "*/producer*"]
+      },
+      "sitemap": {
+        "exists": true,
+        "urls": ["https://www.viu.com/site-sitemap/sitemapindex.xml", "https://www.viu.com/ott/campaign/th/th/sitemap.xml"],
+        "type": "sitemap_index",
+        "sub_sitemaps": 48,
+        "content_types": ["VOD by country/language (sg-en, sg-zh, id-id, hk-zh, my-ms, ph-en, etc.)", "Middle East regions (ye-ar, sa-ar, kw-ar, etc.)"],
+        "estimated_total_urls": "~100000+",
+        "notes": "48 regional sub-sitemaps covering SE Asia, Middle East, and Africa. Singapore alone has ~6066 URLs. Multi-language per region."
+      },
+      "json_ld": {
+        "present": false,
+        "notes": "No JSON-LD found. Geo-restricted - returns 'No Service' page from outside supported regions."
+      },
+      "ssr": {
+        "googlebot_ssr": "geo_restricted",
+        "framework": "custom (noscript present)",
+        "evidence": "Returns 'Viu | No Service' from outside supported regions even with Googlebot UA. Content likely SSR within supported regions.",
+        "title_rendered": true,
+        "meta_description_rendered": false
+      },
+      "recommended_crawl_strategy": "Large sitemap inventory across 48 regional sub-sitemaps (~100k+ URLs). Strict geo-restriction requires regional proxies (SG, MY, PH, HK, ID, etc.). No JSON-LD detected. Content URLs organized by country/language. Need per-region crawling strategy."
+    },
+    "iq.com": {
+      "description": "iQIYI International",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.iq.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["none (Allow: / only)"]
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://www.iq.com/index_intl.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 53,
+        "content_types": ["intl content shards (gzipped XML)"],
+        "estimated_total_urls": "unknown (gzipped sub-sitemaps)",
+        "notes": "53 gzipped sub-sitemaps. Last modified dates from 2021 - sitemap may be stale."
+      },
+      "json_ld": {
+        "present": true,
+        "types_found": ["WebSite", "Organization", "BreadcrumbList"],
+        "schema_quality": "basic",
+        "notes": "JSON-LD found on homepage (3 blocks). Navigation/organizational schema rather than content-specific."
+      },
+      "ssr": {
+        "googlebot_ssr": true,
+        "framework": "Next.js (__next div present)",
+        "evidence": "Homepage returns full SSR with title, meta description, noscript fallback. Play pages return 400 errors. Content pages may have different rendering.",
+        "title_rendered": true,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "Sitemap available but potentially stale (last modified 2021). 53 gzipped sub-sitemaps need decompression. SSR with Next.js on homepage. JSON-LD is organizational only (no content-level schema). Play URLs may return 400 - use album URLs instead. Open robots.txt (Allow: /)."
+    },
+    "wetv.vip": {
+      "description": "WeTV (Tencent Video International)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://wetv.vip/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/api/*", "/search*", "/*?utm_*", "/static/help.html*"]
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://wetv.vip/files/sitemapindex.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 4073,
+        "content_types": ["content pages with obfuscated filenames"],
+        "estimated_total_urls": "~20000+ (4073 sub-sitemaps, ~5 URLs per small shard)",
+        "notes": "Massive number of sub-sitemaps (4073) but individually small. Last modified dates range from 2022 to 2025."
+      },
+      "json_ld": {
+        "present": true,
+        "types_found": ["WebSite", "Organization", "VideoObject"],
+        "schema_quality": "good",
+        "notes": "Multiple JSON-LD blocks on pages including VideoObject for content. Present with both normal and Googlebot UAs."
+      },
+      "ssr": {
+        "googlebot_ssr": true,
+        "framework": "custom SSR",
+        "evidence": "Full SSR with title, meta description, og tags, and JSON-LD all rendered server-side. Rich SEO metadata.",
+        "title_rendered": true,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "Good crawlability. Very large sitemap index (4073 sub-sitemaps) but small per-shard. Full SSR with rich JSON-LD (VideoObject). Parse JSON-LD for structured content data. Multi-language content (en, th, id, ms). Open access with standard disallows."
+    },
+    "showmax.com": {
+      "description": "African streaming (transitioning to DStv Stream)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://www.showmax.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["/widgets/", "/deeplink/", "/preview/", "*successRedirect", "/shows", "/series", "/movies"],
+        "notes": "Notably disallows /shows, /series, /movies - blocks content listing pages. MauiBot fully blocked.",
+        "bot_specific": {"msnbot": {"crawl_delay": 10}, "MauiBot": {"disallow_all": true}}
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://www.showmax.com/sitemap.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": 47,
+        "content_types": ["published (224 URLs)", "custom_widget", "whats_on", "per-country help sitemaps (44 countries)"],
+        "estimated_total_urls": "~500-1000",
+        "notes": "Mostly help/support pages per country. Main content pages (/shows, /series, /movies) are disallowed in robots.txt. NOTE: Showmax is transitioning to DStv Stream - content pages redirect to migration notice."
+      },
+      "json_ld": {
+        "present": true,
+        "types_found": ["empty JSON-LD ({})"],
+        "schema_quality": "none",
+        "notes": "JSON-LD script tag exists but contains empty object {}. Platform is shutting down/migrating to DStv Stream."
+      },
+      "ssr": {
+        "googlebot_ssr": true,
+        "framework": "Next.js (Peacock/Iceberg platform)",
+        "evidence": "Full Next.js SSR with __NEXT_DATA__, meta description, noscript. However, content pages show 'Showmax has a new home' migration notice. Built on 'ott-peacock-iceberg' platform (same as NowTV).",
+        "title_rendered": true,
+        "meta_description_rendered": true
+      },
+      "recommended_crawl_strategy": "LOW PRIORITY - Platform is actively migrating to DStv Stream. Content pages return migration notices. Robots.txt blocks /shows, /series, /movies. Sitemap mostly contains help pages. JSON-LD is empty. Consider targeting DStv Stream instead."
+    },
+    "globoplay.globo.com": {
+      "description": "Brazilian streaming (Globo)",
+      "robots_txt": {
+        "exists": true,
+        "url": "https://globoplay.globo.com/robots.txt",
+        "crawl_delay": null,
+        "notable_disallows": ["CCBot (fully blocked)", "GPTBot (fully blocked)", "Google-Extended (fully blocked)"],
+        "notes": "Explicitly blocks AI training bots (CCBot, GPTBot, Google-Extended). No general User-agent: * restrictions beyond these."
+      },
+      "sitemap": {
+        "exists": true,
+        "url": "https://globoplay.globo.com/sitemap-videos.xml",
+        "type": "sitemap_index",
+        "sub_sitemaps": "massive (2.9MB index file)",
+        "content_types": ["video pages organized by date, with image and video extensions"],
+        "estimated_total_urls": "~500000+ (daily sub-sitemaps dating back years, ~1000 URLs per day shard)",
+        "notes": "Enormous video-focused sitemap. Sub-sitemaps organized by date (e.g., /2026/04/02_1.xml). Includes Google video and image sitemap extensions with thumbnails, content_loc, duration, subscription requirements."
+      },
+      "json_ld": {
+        "present": true,
+        "types_found": ["WebSite", "WebPage", "SearchAction"],
+        "schema_quality": "moderate",
+        "notes": "JSON-LD on homepage with WebSite schema including SearchAction. Content pages may have additional schema. Present with both normal and Googlebot UAs."
+      },
+      "ssr": {
+        "googlebot_ssr": "partial",
+        "framework": "React SPA (id='app')",
+        "evidence": "Homepage title is generic 'Logo Globoplay' suggesting SPA shell. JSON-LD is injected server-side via data-react-helmet. Content likely requires JS rendering.",
+        "title_rendered": false,
+        "meta_description_rendered": false
+      },
+      "recommended_crawl_strategy": "Massive content inventory (~500k+ video URLs). Sitemap is primary discovery mechanism with rich video sitemap extensions (thumbnails, content_loc, duration). Blocks AI bots explicitly. JSON-LD available server-side. SPA rendering means headless browser may be needed for full content. Portuguese language content."
+    }
+  },
+  "summary": {
+    "best_crawlability": [
+      {"platform": "viki.com", "score": "excellent", "reason": "Full SSR, rich JSON-LD (TVSeries), clean sitemaps, no geo-blocking"},
+      {"platform": "nowtv.com", "score": "excellent", "reason": "Full SSR, JSON-LD (TVSeries), 50k+ URLs in organized sitemaps"},
+      {"platform": "shahid.mbc.net", "score": "good", "reason": "Full SSR, JSON-LD, 100k+ URLs, bilingual. Requires recognized bot UA."},
+      {"platform": "wetv.vip", "score": "good", "reason": "Full SSR, rich JSON-LD (VideoObject), 4073 sub-sitemaps"}
+    ],
+    "moderate_crawlability": [
+      {"platform": "mubi.com", "score": "moderate", "reason": "Good SSR, large sitemaps (~150k URLs), but no JSON-LD and 5s crawl-delay"},
+      {"platform": "britbox.com", "score": "moderate", "reason": "13k+ URLs in sitemap, SSR, but geo-restricted content"},
+      {"platform": "globoplay.globo.com", "score": "moderate", "reason": "Massive inventory, video sitemap extensions, but SPA rendering and blocks AI bots"},
+      {"platform": "iq.com", "score": "moderate", "reason": "SSR homepage, basic JSON-LD, but stale sitemaps and play pages return 400"},
+      {"platform": "crave.ca", "score": "moderate", "reason": "Large sitemap (~138k URLs), but pure SPA with no SSR or JSON-LD"}
+    ],
+    "poor_crawlability": [
+      {"platform": "crunchyroll.com", "score": "poor", "reason": "Cloudflare blocks all programmatic access including Googlebot UA"},
+      {"platform": "stan.com.au", "score": "poor", "reason": "Tiny sitemap (26 URLs), SPA rendering, no JSON-LD, no content URLs"},
+      {"platform": "viu.com", "score": "poor", "reason": "Large sitemap but strict geo-restriction returns 'No Service' for all regions"},
+      {"platform": "showmax.com", "score": "deprecated", "reason": "Migrating to DStv Stream, content pages return migration notices, empty JSON-LD"}
+    ],
+    "json_ld_support": {
+      "present": ["viki.com", "nowtv.com", "shahid.mbc.net", "wetv.vip", "iq.com", "globoplay.globo.com"],
+      "absent": ["mubi.com", "crunchyroll.com", "britbox.com", "stan.com.au", "crave.ca", "viu.com"],
+      "empty": ["showmax.com"]
+    },
+    "ssr_support": {
+      "full_ssr": ["viki.com", "nowtv.com", "shahid.mbc.net", "wetv.vip", "mubi.com"],
+      "partial_ssr": ["iq.com", "globoplay.globo.com", "britbox.com", "stan.com.au"],
+      "no_ssr": ["crave.ca"],
+      "blocked": ["crunchyroll.com"],
+      "geo_restricted": ["viu.com"],
+      "deprecated": ["showmax.com"]
+    },
+    "framework_distribution": {
+      "nextjs": ["mubi.com", "viki.com", "shahid.mbc.net", "iq.com", "showmax.com"],
+      "react_spa": ["crave.ca", "globoplay.globo.com"],
+      "custom_ssr": ["nowtv.com", "wetv.vip", "stan.com.au"],
+      "unknown": ["crunchyroll.com", "britbox.com", "viu.com"]
+    }
+  }
+}

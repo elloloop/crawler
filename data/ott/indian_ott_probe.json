@@ -1,0 +1,531 @@
+{
+  "probe_metadata": {
+    "date": "2026-04-03",
+    "description": "Crawlability probe of 10 Indian OTT platforms",
+    "user_agents_tested": [
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Googlebot/2.1 (+http://www.google.com/bot.html)"
+    ]
+  },
+  "platforms": {
+    "zee5.com": {
+      "domain": "zee5.com",
+      "canonical_url": "https://www.zee5.com",
+      "robots_txt": {
+        "has_robots_txt": true,
+        "accessible_with_browser_ua": false,
+        "accessible_with_googlebot_ua": true,
+        "notes": "Returns 'Access Denied' (Akamai WAF) for browser UA; serves valid robots.txt only to Googlebot UA",
+        "key_rules": [
+          "User-agent: * allow: /, disallow: /search*, /amp/*, /b2b-consumption/*, /b2b-live-tv/*",
+          "User-agent: AdsBot-Google allow: /",
+          "User-agent: Googlebot allow: /",
+          "User-agent: PetalBot Disallow: /"
+        ]
+      },
+      "sitemap": {
+        "has_sitemap": true,
+        "sitemap_urls": [
+          "https://www.zee5.com/sitemap2/index.xml",
+          "https://www.zee5.com/sitemap2/video.xml",
+          "https://www.zee5.com/sitemap2/movie.xml",
+          "https://www.zee5.com/sitemap2/tvshow.xml",
+          "https://www.zee5.com/sitemap2/original.xml",
+          "https://www.zee5.com/sitemap2/news.xml",
+          "https://www.zee5.com/sitemap2/images.xml",
+          "https://www.zee5.com/sitemap2/music.xml",
+          "https://www.zee5.com/sitemap2/collection.xml",
+          "https://www.zee5.com/sitemap2/static.xml"
+        ],
+        "structure": "Multi-level: index -> category -> language (e.g., video/movie/en-movie.xml)",
+        "url_counts": {
+          "index_child_sitemaps": 12,
+          "movies_across_11_languages": 4226,
+          "tvshow_sub_sitemaps": 11,
+          "movie_sub_sitemaps": 11
+        },
+        "estimated_total_urls": "50000+",
+        "notes": "Very well-organized sitemap hierarchy with language-specific sub-sitemaps. Requires Googlebot UA to access."
+      },
+      "json_ld": {
+        "has_json_ld": true,
+        "homepage_types": ["WebSite", "BreadcrumbList", "SiteNavigationElement", "ItemList", "Table"],
+        "detail_page_types": ["VideoObject", "Movie", "WebSite", "WebPage", "BreadcrumbList", "Table"],
+        "has_video_object": true,
+        "has_movie_schema": true,
+        "has_tv_series_schema": false,
+        "notes": "Rich JSON-LD on movie detail pages with both VideoObject and Movie types. Includes multilingual name/description."
+      },
+      "googlebot_ssr": {
+        "detected": true,
+        "browser_ua_response_bytes": 366,
+        "googlebot_ua_response_bytes": 675330,
+        "ratio": "1843x larger for Googlebot",
+        "notes": "Extreme difference. Browser UA gets a tiny redirect/blocked response. Googlebot gets full SSR HTML (675KB). Classic crawler-cloaking pattern via Akamai CDN."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api/v1/search", "/graphql"],
+        "results": "All return 403 (blocked by WAF)",
+        "notes": "API gateway (gwapi.zee5.com) referenced in page source. APIs are behind authentication/WAF."
+      },
+      "recommended_crawl_strategy": "Use Googlebot UA for sitemap-driven crawling. Sitemap hierarchy is excellent for targeted content extraction. Start with sitemap2/index.xml, then drill into language-specific movie/tvshow sitemaps. JSON-LD provides structured metadata on detail pages. Must use Googlebot UA or will be blocked by Akamai WAF."
+    },
+
+    "sonyliv.com": {
+      "domain": "sonyliv.com",
+      "canonical_url": "https://www.sonyliv.com",
+      "robots_txt": {
+        "has_robots_txt": true,
+        "accessible_with_browser_ua": true,
+        "accessible_with_googlebot_ua": true,
+        "key_rules": [
+          "User-agent: * Disallow: /search/*, /usercenter/*, /api/*, /client/*, /details/*, /series/*",
+          "Disallow: /CONTENT/DETAIL/BUNDLE/*, /DETAIL/*, /TRAY/EXTCOLLECTION/*, /PAGE/*"
+        ]
+      },
+      "sitemap": {
+        "has_sitemap": true,
+        "sitemap_urls": [
+          "https://www.sonyliv.com/sitemaps/sitemap.xml"
+        ],
+        "structure": "Index with 17 child sitemaps: show, movie, episodic_show, episode, clip, tournament, stage, full_match, highlights, sports_clips, behind_the_scenes, studio_show, trailer, celebrity_page, custom-page, listing-page, static-page",
+        "url_counts": {
+          "index_child_sitemaps": 17,
+          "child_sitemaps_accessible": false
+        },
+        "estimated_total_urls": "Unknown - child sitemaps return 403",
+        "notes": "Sitemap index is accessible but all child sitemaps return 403 (CloudFront). The sitemap structure suggests rich content taxonomy (sports, shows, movies, clips)."
+      },
+      "json_ld": {
+        "has_json_ld": true,
+        "homepage_types": ["Organization", "WebSite"],
+        "detail_page_types": [],
+        "has_video_object": false,
+        "has_movie_schema": false,
+        "has_tv_series_schema": false,
+        "notes": "Only basic Organization and WebSite JSON-LD on homepage. Detail pages blocked by CloudFront 403 for non-browser requests."
+      },
+      "googlebot_ssr": {
+        "detected": false,
+        "browser_ua_response_bytes": 2370986,
+        "googlebot_ua_response_bytes": 919,
+        "ratio": "Browser gets 2.3MB, Googlebot gets 919 bytes (403 error)",
+        "notes": "Inverse of typical SSR pattern: Googlebot is BLOCKED (403 from CloudFront). Only browser UA gets full content. Heavy anti-bot protection."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api/v1/search", "/graphql"],
+        "results": "All return 403",
+        "notes": "APIs explicitly disallowed in robots.txt and blocked by CloudFront."
+      },
+      "recommended_crawl_strategy": "Extremely difficult to crawl. Browser UA required for any content. Must use headless browser (Playwright/Puppeteer) with anti-detection measures. Sitemap index provides category structure but child sitemaps are blocked. Consider Google Cache or web archive as alternative data sources."
+    },
+
+    "jiocinema.com": {
+      "domain": "jiocinema.com",
+      "canonical_url": "https://www.jiocinema.com",
+      "robots_txt": {
+        "has_robots_txt": true,
+        "accessible_with_browser_ua": true,
+        "accessible_with_googlebot_ua": true,
+        "key_rules": [
+          "User-agent: * Disallow: /"
+        ]
+      },
+      "sitemap": {
+        "has_sitemap": false,
+        "sitemap_urls": [],
+        "notes": "robots.txt blocks all crawlers with 'Disallow: /'. No sitemap referenced. /sitemap.xml returns SPA shell HTML."
+      },
+      "json_ld": {
+        "has_json_ld": false,
+        "homepage_types": [],
+        "notes": "Homepage returns minimal SPA shell (2.6KB) with 'noindex, nofollow' meta tag. No JSON-LD. Client-side rendered only."
+      },
+      "googlebot_ssr": {
+        "detected": false,
+        "browser_ua_response_bytes": 2597,
+        "googlebot_ua_response_bytes": 2597,
+        "ratio": "Identical responses",
+        "notes": "Same minimal SPA shell for both UAs. No SSR at all. Meta robots tag says 'noindex, nofollow'."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api/v1/search", "/graphql"],
+        "results": "301 redirect (likely to homepage)",
+        "notes": "Fully client-side SPA with no discoverable public APIs."
+      },
+      "recommended_crawl_strategy": "NOT CRAWLABLE via standard methods. JioCinema explicitly blocks all crawlers via robots.txt and uses noindex/nofollow. Pure client-side SPA with no SSR. Would require full headless browser with JavaScript execution and likely authentication bypass. Consider this platform as intentionally non-crawlable."
+    },
+
+    "mxplayer.in": {
+      "domain": "mxplayer.in",
+      "canonical_url": "https://www.mxplayer.in",
+      "robots_txt": {
+        "has_robots_txt": false,
+        "accessible_with_browser_ua": false,
+        "accessible_with_googlebot_ua": false,
+        "notes": "robots.txt returns an HTML page (SPA shell) instead of a valid robots.txt file. The platform appears to be a minimal stub/redirect."
+      },
+      "sitemap": {
+        "has_sitemap": false,
+        "sitemap_urls": [],
+        "notes": "/sitemap.xml returns same SPA shell HTML. No sitemap available."
+      },
+      "json_ld": {
+        "has_json_ld": false,
+        "homepage_types": [],
+        "notes": "Minimal 2KB HTML shell page with no structured data. MXPlayer appears to have been significantly scaled down or is redirecting to another service."
+      },
+      "googlebot_ssr": {
+        "detected": false,
+        "browser_ua_response_bytes": 2023,
+        "googlebot_ua_response_bytes": 2023,
+        "ratio": "Identical responses",
+        "notes": "Same minimal HTML for both UAs. Platform appears dormant/minimal."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api/v1/search"],
+        "results": "200 but returns SPA shell HTML (not API data)",
+        "notes": "All paths return the same SPA shell. No real API endpoints exposed."
+      },
+      "recommended_crawl_strategy": "NOT EFFECTIVELY CRAWLABLE. Platform appears dormant or redirected. The site returns only a minimal HTML shell regardless of path or UA. No content accessible without full browser execution. Low value target."
+    },
+
+    "altbalaji.com": {
+      "domain": "altbalaji.com",
+      "canonical_url": "https://www.altbalaji.com",
+      "robots_txt": {
+        "has_robots_txt": false,
+        "accessible_with_browser_ua": false,
+        "accessible_with_googlebot_ua": false,
+        "notes": "robots.txt returns empty response (0 bytes) with both UA types."
+      },
+      "sitemap": {
+        "has_sitemap": false,
+        "sitemap_urls": [],
+        "notes": "/sitemap.xml returns 404. No sitemap discoverable."
+      },
+      "json_ld": {
+        "has_json_ld": false,
+        "homepage_types": [],
+        "notes": "Homepage returns 6.3KB SPA shell with no JSON-LD. Client-side rendered React application."
+      },
+      "googlebot_ssr": {
+        "detected": false,
+        "browser_ua_response_bytes": 6309,
+        "googlebot_ua_response_bytes": 6309,
+        "ratio": "Identical responses",
+        "notes": "Same SPA shell for both UAs. No server-side rendering detected."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api/v1/search"],
+        "results": "404",
+        "notes": "No discoverable public API endpoints."
+      },
+      "recommended_crawl_strategy": "Requires headless browser for any content extraction. No robots.txt, no sitemap, no SSR, no JSON-LD. Full JavaScript execution needed. URL discovery would need to start from homepage navigation. Low crawlability score."
+    },
+
+    "etvwin.com": {
+      "domain": "etvwin.com",
+      "canonical_url": "https://www.etvwin.com",
+      "robots_txt": {
+        "has_robots_txt": true,
+        "accessible_with_browser_ua": true,
+        "accessible_with_googlebot_ua": true,
+        "key_rules": [
+          "User-agent: * Allow: /, Disallow: /*?_rsc=, /search, /browse, /account, /login, /api, /filter, /settings/, /mylist, /legal/, /watch",
+          "Allow: /subscription-plans, /termsandconditions, /privacypolicy, /faq, /aboutus, /contactus",
+          "Blocks AI bots: GPTBot, ChatGPT-User, PerplexityBot, ClaudeBot, anthropic-ai, Claude-Web, OAI-SearchBot"
+        ]
+      },
+      "sitemap": {
+        "has_sitemap": true,
+        "sitemap_urls": [
+          "https://www.etvwin.com/index-sitemap.xml"
+        ],
+        "structure": "Index referencing 5 sub-sitemaps (movies, series, episodes, live-tv, video). Note: sitemap index has localhost URLs (bug), but actual sitemaps accessible at www.etvwin.com",
+        "url_counts": {
+          "movies": 501,
+          "series": 152,
+          "episodes": 501,
+          "video": 501,
+          "live_tv": 7
+        },
+        "estimated_total_urls": "1662",
+        "notes": "Sitemap index XML has a bug (references localhost:3000 instead of www.etvwin.com), but actual sitemap files are accessible. Next.js application."
+      },
+      "json_ld": {
+        "has_json_ld": false,
+        "homepage_types": [],
+        "notes": "No JSON-LD detected on homepage. Server-side rendered via Next.js but without structured data markup."
+      },
+      "googlebot_ssr": {
+        "detected": false,
+        "browser_ua_response_bytes": 16237,
+        "googlebot_ua_response_bytes": 16237,
+        "ratio": "Identical responses",
+        "notes": "Same response for both UAs. Next.js SSR serves identical content regardless of user agent."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api"],
+        "results": "200 but returns HTML (Next.js catch-all)",
+        "notes": "/api explicitly disallowed in robots.txt. Returns HTML shell, not API data."
+      },
+      "recommended_crawl_strategy": "Sitemap-driven crawling is viable despite the localhost URL bug in the index. Replace 'localhost:3000' with 'www.etvwin.com' in sitemap URLs. Standard HTTP crawling works (Next.js SSR). No Googlebot spoofing needed. Explicitly blocks AI bots - use standard crawler UA. Focus on movies-sitemap.xml and series-sitemap.xml for content discovery."
+    },
+
+    "sunnxt.com": {
+      "domain": "sunnxt.com",
+      "canonical_url": "https://www.sunnxt.com",
+      "robots_txt": {
+        "has_robots_txt": true,
+        "accessible_with_browser_ua": true,
+        "accessible_with_googlebot_ua": true,
+        "key_rules": [
+          "User-agent: * Disallow: /content/searchcontents/*",
+          "Explicitly allows: Googlebot, Googlebot-Video, Applebot, bingbot, Baiduspider, NaverBot, Yandex, SeznamBot",
+          "Allow: / for listed bots"
+        ]
+      },
+      "sitemap": {
+        "has_sitemap": true,
+        "sitemap_urls": [
+          "https://www.sunnxt.com/sitemap.xml"
+        ],
+        "structure": "Index with 6 child sitemaps: movies, tvshows, channels, actors, genres, songs",
+        "url_counts": {
+          "movies": 4395,
+          "tvshows": 15,
+          "channels": 44,
+          "actors": 3284,
+          "genres": 36,
+          "songs": 2635
+        },
+        "estimated_total_urls": 10409,
+        "notes": "Well-organized sitemap with good coverage. Last modified dates show 2022, suggesting sitemap may be stale."
+      },
+      "json_ld": {
+        "has_json_ld": true,
+        "homepage_types": ["WebSite", "ItemList", "Organization", "SiteNavigationElement", "EntryPoint"],
+        "detail_page_types": ["movie", "Organization", "SiteNavigationElement", "EntryPoint", "WebPage"],
+        "has_video_object": false,
+        "has_movie_schema": true,
+        "has_tv_series_schema": false,
+        "notes": "Rich JSON-LD on both homepage and detail pages. Movie detail pages include 'movie' type (lowercase) with full metadata. 5 JSON-LD blocks per page."
+      },
+      "googlebot_ssr": {
+        "detected": true,
+        "browser_ua_response_bytes": 543211,
+        "googlebot_ua_response_bytes": 920935,
+        "ratio": "1.7x larger for Googlebot",
+        "notes": "Googlebot receives significantly more content (920KB vs 543KB), indicating enhanced SSR or additional content injection for crawlers."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/content/searchcontents"],
+        "results": "404",
+        "notes": "Search endpoint disallowed in robots.txt and returns 404."
+      },
+      "recommended_crawl_strategy": "HIGHLY CRAWLABLE. Best candidate among all platforms. Use sitemap.xml for URL discovery (10,400+ URLs). Rich JSON-LD on detail pages provides structured movie metadata. SSR content available with both regular and Googlebot UA. Start with movies.xml sitemap (4,395 URLs). Standard HTTP crawling sufficient - no headless browser needed."
+    },
+
+    "hoichoi.tv": {
+      "domain": "hoichoi.tv",
+      "canonical_url": "https://www.hoichoi.tv",
+      "robots_txt": {
+        "has_robots_txt": false,
+        "accessible_with_browser_ua": false,
+        "accessible_with_googlebot_ua": false,
+        "notes": "Cloudflare challenge page returned for both UA types. JavaScript challenge (managed challenge) blocks automated access. 'Just a moment...' interstitial."
+      },
+      "sitemap": {
+        "has_sitemap": false,
+        "sitemap_urls": [],
+        "notes": "/sitemap.xml also blocked by Cloudflare challenge. No discoverable sitemap."
+      },
+      "json_ld": {
+        "has_json_ld": false,
+        "homepage_types": [],
+        "notes": "Cannot assess - all requests blocked by Cloudflare managed challenge requiring JavaScript execution."
+      },
+      "googlebot_ssr": {
+        "detected": false,
+        "browser_ua_response_bytes": null,
+        "googlebot_ua_response_bytes": null,
+        "notes": "Both UAs receive Cloudflare challenge page. Cannot determine SSR behavior."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api/v1/search"],
+        "results": "403 (Cloudflare)",
+        "notes": "All endpoints blocked by Cloudflare challenge."
+      },
+      "recommended_crawl_strategy": "VERY DIFFICULT. Protected by Cloudflare managed challenge on all paths. Requires: (1) headless browser with Cloudflare bypass (e.g., undetected-chromedriver, Playwright with stealth plugin), (2) cookie/session management for challenge tokens. Consider using Cloudflare-aware scraping services. URL discovery must rely on external sources (Google SERP, web archives) since sitemaps are blocked."
+    },
+
+    "erosnow.com": {
+      "domain": "erosnow.com",
+      "canonical_url": "https://erosnow.com",
+      "robots_txt": {
+        "has_robots_txt": true,
+        "accessible_with_browser_ua": true,
+        "accessible_with_googlebot_ua": true,
+        "key_rules": [
+          "User-agent: * Allow: /, Disallow: /account, /privacypolicy, /myprofile, /404, /v2, /api"
+        ]
+      },
+      "sitemap": {
+        "has_sitemap": true,
+        "sitemap_urls": [
+          "https://erosnow.com/sitemap-files/sitemap-index.xml"
+        ],
+        "structure": "Large index with 102 child sitemaps covering: movies (34 sitemaps), music (37 sitemaps), TV, originals, stars, plus a main crawling sitemap",
+        "url_counts": {
+          "index_child_sitemaps": 102,
+          "movie_sitemaps": 34,
+          "music_sitemaps": 37,
+          "sample_movie_sitemap_urls": 575
+        },
+        "estimated_total_urls": "50000+ (102 sitemaps x avg 500 URLs each)",
+        "notes": "Extensive sitemap coverage but all lastmod dates are 2019-10-04, suggesting the sitemaps have not been updated in years. Eros Now merged with STX to form Eros STX."
+      },
+      "json_ld": {
+        "has_json_ld": true,
+        "homepage_types": ["Organization", "WebSite"],
+        "detail_page_types": ["Organization", "WebSite"],
+        "has_video_object": false,
+        "has_movie_schema": false,
+        "has_tv_series_schema": false,
+        "notes": "Only basic Organization and WebSite JSON-LD. No content-specific schema (VideoObject, Movie) found on detail pages."
+      },
+      "googlebot_ssr": {
+        "detected": true,
+        "browser_ua_response_bytes": 110662,
+        "googlebot_ua_response_bytes": 129683,
+        "ratio": "1.17x larger for Googlebot",
+        "notes": "Slight difference suggesting some additional SSR content for Googlebot, but not dramatic."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api", "/graphql"],
+        "results": "/api returns 200 (HTML homepage), /graphql returns 200 (HTML homepage)",
+        "notes": "Both paths return the homepage HTML (SPA fallback routing). No actual API data exposed. /api explicitly disallowed in robots.txt."
+      },
+      "recommended_crawl_strategy": "Sitemap-driven approach viable but data may be stale (2019 lastmod). Large URL corpus available. Standard HTTP crawling works. JSON-LD is minimal (no Movie/VideoObject types), so metadata extraction would need HTML parsing of detail pages. Start with sitemap_movie_*.xml files for movie content."
+    },
+
+    "lionsgateplay.com": {
+      "domain": "lionsgateplay.com",
+      "canonical_url": "https://www.lionsgateplay.com",
+      "robots_txt": {
+        "has_robots_txt": false,
+        "accessible_with_browser_ua": false,
+        "accessible_with_googlebot_ua": false,
+        "notes": "Returns 403 ERROR from CloudFront for both UA types. 'Request blocked' error page."
+      },
+      "sitemap": {
+        "has_sitemap": false,
+        "sitemap_urls": [],
+        "notes": "/sitemap.xml also returns 403 from CloudFront."
+      },
+      "json_ld": {
+        "has_json_ld": false,
+        "homepage_types": [],
+        "notes": "Cannot assess - all requests blocked by CloudFront (403 error). Lionsgate Play may have been discontinued or merged in the Indian market."
+      },
+      "googlebot_ssr": {
+        "detected": false,
+        "notes": "Both UAs receive 403 from CloudFront. Site may be defunct."
+      },
+      "api_endpoints": {
+        "found": false,
+        "tested_paths": ["/api/v1/search"],
+        "results": "403",
+        "notes": "All endpoints blocked by CloudFront."
+      },
+      "recommended_crawl_strategy": "NOT CRAWLABLE. Site returns 403 for all requests regardless of UA. Lionsgate Play India appears to have been shut down or significantly restricted. Not a viable crawl target."
+    }
+  },
+
+  "summary": {
+    "crawlability_ranking": [
+      {
+        "rank": 1,
+        "platform": "sunnxt.com",
+        "score": "EXCELLENT",
+        "reason": "Rich sitemaps (10,400+ URLs), strong JSON-LD (Movie type on detail pages), SSR content, no aggressive bot blocking. Best overall target."
+      },
+      {
+        "rank": 2,
+        "platform": "zee5.com",
+        "score": "GOOD (with Googlebot UA)",
+        "reason": "Extensive sitemaps (4,200+ movies across 11 languages), rich JSON-LD (VideoObject + Movie), strong SSR for Googlebot. Requires Googlebot UA spoofing."
+      },
+      {
+        "rank": 3,
+        "platform": "etvwin.com",
+        "score": "GOOD",
+        "reason": "Working sitemaps (1,662 URLs), Next.js SSR, standard crawling works. No JSON-LD but HTML is parseable. Blocks AI bots specifically."
+      },
+      {
+        "rank": 4,
+        "platform": "erosnow.com",
+        "score": "MODERATE",
+        "reason": "Large sitemap corpus (102 child sitemaps, ~50K URLs) but data may be stale (2019). Minimal JSON-LD. Standard crawling works."
+      },
+      {
+        "rank": 5,
+        "platform": "sonyliv.com",
+        "score": "POOR",
+        "reason": "Sitemap index accessible but all child sitemaps blocked (403). Heavy CloudFront protection blocks Googlebot. Browser-only access with 2.3MB SSR pages."
+      },
+      {
+        "rank": 6,
+        "platform": "altbalaji.com",
+        "score": "POOR",
+        "reason": "No robots.txt, no sitemap, no SSR, no JSON-LD. Pure SPA requiring headless browser."
+      },
+      {
+        "rank": 7,
+        "platform": "jiocinema.com",
+        "score": "NOT CRAWLABLE",
+        "reason": "Explicitly blocks all crawlers (Disallow: /). noindex/nofollow meta tag. Pure SPA shell (2.6KB). Intentionally non-crawlable."
+      },
+      {
+        "rank": 8,
+        "platform": "mxplayer.in",
+        "score": "NOT CRAWLABLE",
+        "reason": "Platform appears dormant/minimal. Returns 2KB HTML shell for all paths. No content accessible."
+      },
+      {
+        "rank": 9,
+        "platform": "hoichoi.tv",
+        "score": "NOT CRAWLABLE",
+        "reason": "Cloudflare managed challenge blocks all automated access. Requires specialized Cloudflare bypass tooling."
+      },
+      {
+        "rank": 10,
+        "platform": "lionsgateplay.com",
+        "score": "NOT CRAWLABLE",
+        "reason": "CloudFront 403 on all requests. Service appears shut down or heavily restricted in India."
+      }
+    ],
+    "key_insights": {
+      "ssr_for_googlebot": ["zee5.com (1843x difference)", "sunnxt.com (1.7x difference)", "erosnow.com (1.17x difference)"],
+      "platforms_with_sitemaps": ["zee5.com", "sonyliv.com (index only)", "etvwin.com", "sunnxt.com", "erosnow.com"],
+      "platforms_with_movie_jsonld": ["zee5.com (VideoObject + Movie)", "sunnxt.com (movie type)"],
+      "platforms_blocking_ai_bots": ["etvwin.com (GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, etc.)"],
+      "anti_bot_protection": {
+        "akamai_waf": ["zee5.com"],
+        "cloudfront": ["sonyliv.com", "lionsgateplay.com"],
+        "cloudflare": ["hoichoi.tv"]
+      },
+      "total_discoverable_sitemap_urls": "66,000+ across all platforms with accessible sitemaps"
+    }
+  }
+}

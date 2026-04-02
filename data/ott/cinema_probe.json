@@ -1,0 +1,306 @@
+{
+  "probe_date": "2026-04-03",
+  "probe_notes": "Automated crawlability investigation of cinema chain websites for showtime data extraction.",
+
+  "uk_cinemas": {
+    "www.cineworld.co.uk": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Allows most crawling. Disallows /booking, /tsr/assets, /facebook paths.",
+      "has_sitemap": true,
+      "sitemap_url": "https://www.cineworld.co.uk/sitemap.xml",
+      "sitemap_details": "Single sitemap with ~1500 URLs. Contains film pages (/films/{title}/ho{id}), cinema locations (/cinemas/{city}), and blog content.",
+      "has_structured_data": false,
+      "structured_data_notes": "No JSON-LD on film or listing pages. Film data embedded in JavaScript objects, not semantic markup.",
+      "api_endpoints_found": [
+        "/uk/data-api-service/v1/quickbook/{cinemaId}/cinemas (returns JSON list of 119 cinemas with addresses, coordinates)",
+        "/uk/data-api-service/v1/quickbook/{cinemaId}/cinema-events/with-film/with-ede (cinema events API)",
+        "/uk/data-api-service/v1/quickbook/{cinemaId}/film-events/in-cinema/with-ede (film events API - returned 404 in test)"
+      ],
+      "bot_protection": "moderate",
+      "bot_protection_notes": "Site served content to curl with standard UA. Vue.js frontend with DAS API backend.",
+      "framework": "Vue.js with custom data-api-service backend",
+      "recommended_strategy": "api",
+      "strategy_details": "Use /uk/data-api-service REST API to enumerate cinemas and film events. Cinemas endpoint returns full location list with IDs. Film events endpoints need correct cinema IDs. No headless browser needed for data extraction."
+    },
+
+    "www.odeon.co.uk": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Minimal robots.txt. Only disallows /ticketing/. No sitemap declared.",
+      "has_sitemap": false,
+      "sitemap_url": null,
+      "sitemap_details": "No sitemap declared in robots.txt. Direct access to /sitemap.xml returned 403.",
+      "has_structured_data": "unknown",
+      "structured_data_notes": "All page requests blocked by Cloudflare challenge. Could not inspect HTML for JSON-LD.",
+      "api_endpoints_found": [],
+      "bot_protection": "aggressive",
+      "bot_protection_notes": "Cloudflare managed challenge on all requests including Googlebot UA. Both /api/showtimes and /restful/v1/odeon/showtimes returned 403. Even robots.txt was barely accessible.",
+      "framework": "Unknown (behind Cloudflare)",
+      "recommended_strategy": "headless_browser",
+      "strategy_details": "Aggressive Cloudflare protection blocks all simple HTTP requests. Requires headless browser with JS execution to solve Cloudflare challenges. Consider using Fandango/Google as aggregator alternative for Odeon showtime data."
+    },
+
+    "www.myvue.com": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Disallows /book-tickets/, /showing/, /screening/, /tag/, /components/, /order/, /cdn-cgi/, /login/*, /my-account*.",
+      "has_sitemap": true,
+      "sitemap_url": "https://www.myvue.com/sitemap.xml",
+      "sitemap_details": "Single sitemap with ~900 URLs. Contains film pages (/film/{title}), experience pages, and venue pages. No showtime URLs in sitemap.",
+      "has_structured_data": false,
+      "structured_data_notes": "No JSON-LD on film pages or whats-on pages. Film metadata embedded in Sitecore JSS props (Next.js __NEXT_DATA__ equivalent via Sitecore).",
+      "api_endpoints_found": [
+        "/api/microservice/showings/cinemas (returns full JSON list of 90+ cinemas with IDs, names, whatsOn URLs)",
+        "/api/microservice/showings/cinemas/{cinemaId}/films (requires auth - returned 401)",
+        "Cloudflare Stream for video trailers"
+      ],
+      "bot_protection": "low",
+      "bot_protection_notes": "Cinemas API endpoint is publicly accessible without authentication. Film showings endpoint requires auth token.",
+      "framework": "Next.js with Sitecore JSS, Cloudflare Stream for video",
+      "recommended_strategy": "api",
+      "strategy_details": "Cinemas list API is freely accessible. Film showings API needs auth token (likely extractable from page load). Alternative: scrape /cinema/{name}/whats-on pages via Sitecore SSR which embeds film data in __NEXT_DATA__ props. Sitemap crawl for film catalogue, API for showtimes."
+    },
+
+    "www.curzon.com": {
+      "has_robots_txt": false,
+      "robots_txt_notes": "Cloudflare challenge on robots.txt request. Could not retrieve.",
+      "has_sitemap": false,
+      "sitemap_url": null,
+      "sitemap_details": "Cloudflare challenge on /sitemap.xml. No sitemap accessible.",
+      "has_structured_data": "unknown",
+      "structured_data_notes": "All requests blocked by Cloudflare managed challenge, including Googlebot UA. Cannot inspect page content.",
+      "api_endpoints_found": [],
+      "bot_protection": "aggressive",
+      "bot_protection_notes": "Cloudflare managed challenge on every request. Even Googlebot UA triggers JS challenge requiring browser execution.",
+      "framework": "Unknown (behind Cloudflare)",
+      "recommended_strategy": "headless_browser",
+      "strategy_details": "Fully Cloudflare-protected. Requires headless browser with Cloudflare bypass (e.g., undetected-chromedriver or Playwright with stealth). Small chain so limited data volume."
+    },
+
+    "www.picturehouses.com": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Permissive robots.txt. Empty Disallow (allows everything). No sitemap declared in robots.txt.",
+      "has_sitemap": true,
+      "sitemap_url": "https://www.picturehouses.com/sitemap.xml",
+      "sitemap_details": "Single sitemap with 1174 URLs. Includes /cinema, /blog, /create pages. No explicit film/movie URL patterns found in sitemap (films may use different path naming).",
+      "has_structured_data": false,
+      "structured_data_notes": "No JSON-LD found. Movie page returned 404 for test URL. Site uses Laravel with PWA service worker.",
+      "api_endpoints_found": [],
+      "bot_protection": "low",
+      "bot_protection_notes": "No bot protection detected. Robots.txt and sitemap freely accessible. Content served to standard curl requests.",
+      "framework": "Laravel with PWA (Progressive Web App)",
+      "recommended_strategy": "sitemap_crawl",
+      "strategy_details": "Sitemap freely accessible with 1174 URLs. Low bot protection. Standard HTTP crawl of sitemap URLs should work. Film data likely loaded client-side via JS, so headless browser may be needed for showtime extraction from individual pages."
+    },
+
+    "www.everymancinema.com": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Disallows /theaters/, /cms-preview/, specific film listings, and query param filters. Explicitly blocks certain film-listing URLs.",
+      "has_sitemap": true,
+      "sitemap_url": "https://www.everymancinema.com/sitemap-0.xml",
+      "sitemap_details": "Single sitemap with 673 URLs. Contains film listings (/film-listing/{id}-{title}/), 50+ theater locations (/theaters/{code}-everyman-{location}/), events, /showtimes/ page, and private hire pages.",
+      "has_structured_data": false,
+      "structured_data_notes": "No JSON-LD on film listing or showtimes pages. React/Theme UI frontend with client-side rendering. Showtimes require venue selection first.",
+      "api_endpoints_found": [],
+      "bot_protection": "low",
+      "bot_protection_notes": "No Cloudflare or bot challenges detected. Site content accessible to standard HTTP requests. Gatsby-based static site.",
+      "framework": "React with Theme UI, likely Gatsby or similar SSG",
+      "recommended_strategy": "sitemap_crawl_plus_headless",
+      "strategy_details": "Sitemap provides film and theater URLs. Showtimes are loaded dynamically after venue selection, requiring headless browser for extraction. Film catalog can be crawled from sitemap. Relatively small dataset (673 URLs)."
+    },
+
+    "www.showcasecinemas.co.uk": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Disallows /theaters/, /cms-preview, /404/, and /insider-* account paths.",
+      "has_sitemap": true,
+      "sitemap_url": "https://www.showcasecinemas.co.uk/sitemap-0.xml",
+      "sitemap_details": "Single sitemap with 350 URLs. Contains ~130 movie pages (/movies/{id}-{title}/), 16 cinema locations (/theaters/{code}-showcase-cinema-{location}/), event cinema, offers, and /showtimes/ page.",
+      "has_structured_data": false,
+      "structured_data_notes": "No JSON-LD on showtimes or movie pages. Gatsby-based React site with client-side rendering. Showtimes require location selection.",
+      "api_endpoints_found": [],
+      "bot_protection": "low",
+      "bot_protection_notes": "No bot protection detected. Gatsby static pages served to standard requests.",
+      "framework": "Gatsby (React SSG) with Theme UI",
+      "recommended_strategy": "sitemap_crawl_plus_headless",
+      "strategy_details": "Sitemap has 350 URLs with films and theaters. Showtimes loaded dynamically via JavaScript after venue selection. Headless browser needed for actual showtime data. Small dataset."
+    }
+  },
+
+  "india_cinemas": {
+    "www.pvrcinemas.com": {
+      "has_robots_txt": false,
+      "robots_txt_notes": "Access Denied (Akamai CDN). Returns HTML error page instead of robots.txt.",
+      "has_sitemap": false,
+      "sitemap_url": null,
+      "sitemap_details": "Cannot access. Blocked by Akamai CDN security.",
+      "has_structured_data": "unknown",
+      "structured_data_notes": "All requests return 403 Access Denied from Akamai edge. Cannot inspect page content.",
+      "api_endpoints_found": [],
+      "bot_protection": "aggressive",
+      "bot_protection_notes": "Akamai CDN blocks all automated requests including robots.txt. Both /api/ and /now-showing returned 403.",
+      "framework": "Unknown (behind Akamai CDN)",
+      "recommended_strategy": "headless_browser_or_aggregator",
+      "strategy_details": "Extremely aggressive bot protection via Akamai. Even robots.txt is blocked. Requires either headless browser with residential proxy, or use BookMyShow/Google as aggregator for PVR INOX showtime data. PVR INOX is India's largest chain, so aggregator approach via BookMyShow is practical."
+    },
+
+    "in.bookmyshow.com": {
+      "has_robots_txt": false,
+      "robots_txt_notes": "Cloudflare blocks all requests. Returns 'Sorry, you have been blocked' page.",
+      "has_sitemap": false,
+      "sitemap_url": null,
+      "sitemap_details": "Cannot access. Blocked by Cloudflare security.",
+      "has_structured_data": "unknown",
+      "structured_data_notes": "All requests blocked. Cannot inspect page content.",
+      "api_endpoints_found": [
+        "/api/explore/v1/discover/movie (blocked - 403)",
+        "/serp/api/search/home?city=MUMBAI (blocked - 403)",
+        "/api/movies/nowshowing/Mumbai (blocked - 403)"
+      ],
+      "bot_protection": "aggressive",
+      "bot_protection_notes": "Cloudflare blocks all automated requests. All known API endpoints return 403. Site explicitly blocks bot access.",
+      "framework": "Unknown (behind Cloudflare)",
+      "recommended_strategy": "headless_browser",
+      "strategy_details": "BookMyShow is India's primary aggregator for all cinema chains. Requires headless browser with Cloudflare bypass and likely residential proxies. Known API endpoints: /api/explore/v1/discover/movie, /serp/api/search/home. Mobile app APIs may be more accessible with proper headers. High-value target as it aggregates PVR INOX, Cinepolis, and independent cinemas."
+    },
+
+    "www.cinepolisindia.com": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Permissive robots.txt. Only has Allow: /.well-known/ and empty Disallow. No sitemap declared.",
+      "has_sitemap": false,
+      "sitemap_url": null,
+      "sitemap_details": "No sitemap in robots.txt or standard location.",
+      "has_structured_data": false,
+      "structured_data_notes": "No JSON-LD on pages. However, Next.js SSR embeds rich movie data in __NEXT_DATA__ JSON block including movie IDs, titles, genres, languages, release dates, runtime, and image URLs.",
+      "api_endpoints_found": [
+        "api.cinepolisindia.com (separate API subdomain, blocked by Cloudflare)",
+        "api_new.cinepolisindia.com (image/asset CDN for movie posters)",
+        "Next.js SSR __NEXT_DATA__ contains full movie catalog in page props",
+        "/movie-list/{city} returns SSR page with nowPlayingMoviesData and comingSoonMoviesData"
+      ],
+      "bot_protection": "mixed",
+      "bot_protection_notes": "Main website (www) serves Next.js SSR content freely. API subdomain (api.cinepolisindia.com) blocked by Cloudflare. WebFetch can access main site pages.",
+      "framework": "Next.js with Tailwind CSS, HeadlessUI",
+      "recommended_strategy": "ssr_scrape",
+      "strategy_details": "Best approach: crawl /movie-list/{city} pages for each city. Next.js SSR embeds complete movie data in __NEXT_DATA__ script tag including movie_id, title, genre, language, runtime, release_date, image URLs. Showtime data requires city-specific pages. No headless browser needed - standard HTTP fetch works for SSR pages. API subdomain is Cloudflare-blocked."
+    }
+  },
+
+  "us_cinemas": {
+    "www.amctheatres.com": {
+      "has_robots_txt": "partially_accessible",
+      "robots_txt_notes": "Queue-it virtual waiting room intercepts all requests including robots.txt. Site uses queue system for traffic management.",
+      "has_sitemap": true,
+      "sitemap_url": "https://www.amctheatres.com/sitemap.xml",
+      "sitemap_details": "Sitemap index with 7 sub-sitemaps: sitemap-cities.xml, sitemap-content.xml, sitemap-faq.xml, sitemap-markets.xml, sitemap-movies.xml (100+ movie URLs), sitemap-states.xml, sitemap-theatres.xml (100+ theater URLs). Movie pattern: /movies/{title}-{id}. Theater pattern: /movie-theatres/{city}/{theater-name}.",
+      "has_structured_data": "unknown",
+      "structured_data_notes": "Queue-it waiting room prevents page inspection. Cannot verify JSON-LD presence.",
+      "api_endpoints_found": [
+        "Sitemap accessible (bypasses Queue-it)",
+        "/movies/{title}-{id} (movie pages, behind Queue-it)",
+        "/movie-theatres/{city}/{theater} (theater pages, behind Queue-it)"
+      ],
+      "bot_protection": "aggressive",
+      "bot_protection_notes": "Queue-it virtual waiting room intercepts ALL page requests. Sitemaps are accessible (200 OK). Actual pages require Queue-it token/cookie.",
+      "framework": "Unknown (behind Queue-it waiting room)",
+      "recommended_strategy": "sitemap_plus_headless",
+      "strategy_details": "Sitemaps are freely accessible and provide complete movie/theater URL inventory. Page content requires headless browser to solve Queue-it challenge. Sitemap-movies.xml has 100+ films, sitemap-theatres.xml has 100+ theaters organized by city. Alternative: use Fandango as aggregator which lists AMC theaters."
+    },
+
+    "www.regmovies.com": {
+      "has_robots_txt": false,
+      "robots_txt_notes": "Cloudflare blocks all requests. Returns 'Sorry, you have been blocked' page.",
+      "has_sitemap": false,
+      "sitemap_url": null,
+      "sitemap_details": "Cannot access. /sitemap.xml returns 403 Cloudflare block.",
+      "has_structured_data": "unknown",
+      "structured_data_notes": "All requests blocked. Cannot inspect pages.",
+      "api_endpoints_found": [],
+      "bot_protection": "aggressive",
+      "bot_protection_notes": "Cloudflare blocks all automated requests including Googlebot-style UA. No content accessible via simple HTTP.",
+      "framework": "Unknown (behind Cloudflare, likely same stack as Cineworld - both are Cineworld Group/Regal parent company)",
+      "recommended_strategy": "aggregator",
+      "strategy_details": "Completely locked down. Use Fandango as aggregator - Fandango's theater sitemap includes Regal locations. Fandango has 3008 theater URLs including Regal. Alternative: headless browser with Cloudflare bypass, but aggregator is more reliable."
+    },
+
+    "www.cinemark.com": {
+      "has_robots_txt": false,
+      "robots_txt_notes": "Cloudflare blocks all requests. Returns 'Sorry, you have been blocked' page.",
+      "has_sitemap": false,
+      "sitemap_url": null,
+      "sitemap_details": "Cannot access. /sitemap.xml returns 403 Cloudflare block.",
+      "has_structured_data": "unknown",
+      "structured_data_notes": "All requests blocked. Cannot inspect pages.",
+      "api_endpoints_found": [],
+      "bot_protection": "aggressive",
+      "bot_protection_notes": "Cloudflare blocks all automated requests. No content accessible.",
+      "framework": "Unknown (behind Cloudflare)",
+      "recommended_strategy": "aggregator",
+      "strategy_details": "Completely locked down behind Cloudflare. Use Fandango as aggregator - Fandango theater sitemap includes Cinemark locations among its 3008 theaters. Alternative: headless browser with residential proxy, but Fandango aggregator is more practical."
+    },
+
+    "www.fandango.com": {
+      "has_robots_txt": true,
+      "robots_txt_notes": "Detailed robots.txt. Disallows /api/, /napi/, /account/*, /bin/, various legacy .aspx pages, and date/filter query params. Allows /accounts/dashboard. Sitemap declared.",
+      "has_sitemap": true,
+      "sitemap_url": "https://www.fandango.com/sitemapindex.xml",
+      "sitemap_details": "Sitemap index with 8 sub-sitemaps: sitemapindex-movies.xml (4 sub-sitemaps, ~45000 movie URLs), sitemapindex-theaters.xml (1 sub-sitemap, 3008 theater URLs), sitemapindex-videos.xml, sitemapindex-performers.xml, static-pages.xml, image sitemaps. Movie pattern: /{title}-{id}/movie-overview. Theater pattern: /{theater-name}-{code}/theater-page.",
+      "has_structured_data": true,
+      "structured_data_notes": "JSON-LD Movie schema found on movie pages with: name, director, duration, contentRating, datePublished, genre, description, aggregateRating. Also FAQPage schema. No ScreeningEvent schema - showtimes loaded dynamically.",
+      "api_endpoints_found": [
+        "/api/ (disallowed in robots.txt)",
+        "/napi/ (disallowed in robots.txt)",
+        "Sitemap provides comprehensive movie (45K) and theater (3K) URL inventory"
+      ],
+      "bot_protection": "moderate",
+      "bot_protection_notes": "Standard robots.txt restrictions. Sitemaps and content pages accessible. APIs explicitly disallowed. Movie pages serve JSON-LD structured data.",
+      "framework": "React with server-side rendering, Google Tag Manager, MPS ad platform",
+      "recommended_strategy": "sitemap_crawl",
+      "strategy_details": "BEST US TARGET. Fandango is the primary US aggregator covering AMC, Regal, Cinemark, and thousands of independent theaters. Sitemap provides 45K movie URLs and 3K theater URLs. Movie pages have JSON-LD Movie schema. Theater pages list showtimes. Standard HTTP crawl works. Start with sitemap-theaters for venue discovery, then crawl individual theater pages for showtimes. This single source covers all major US chains."
+    }
+  },
+
+  "summary": {
+    "best_targets_by_region": {
+      "uk": {
+        "primary": "www.cineworld.co.uk",
+        "reason": "Open REST API (/uk/data-api-service) with cinema list and film events. No heavy bot protection.",
+        "secondary": "www.myvue.com",
+        "secondary_reason": "Public cinemas API endpoint. 90+ cinemas. SSR content with film metadata."
+      },
+      "india": {
+        "primary": "www.cinepolisindia.com",
+        "reason": "Next.js SSR serves full movie data in __NEXT_DATA__. No bot protection on main site. City-based pages.",
+        "aggregator_note": "in.bookmyshow.com is the ideal aggregator (covers all chains) but heavily Cloudflare-protected. May need mobile app API reverse engineering."
+      },
+      "us": {
+        "primary": "www.fandango.com",
+        "reason": "Best US aggregator. 45K movie URLs, 3K theater URLs in sitemap. JSON-LD Movie structured data. Covers AMC, Regal, Cinemark, independents."
+      }
+    },
+
+    "structured_data_findings": {
+      "json_ld_movie_found": ["www.fandango.com"],
+      "json_ld_screening_event_found": [],
+      "no_structured_data": ["www.cineworld.co.uk", "www.myvue.com", "www.everymancinema.com", "www.showcasecinemas.co.uk", "www.picturehouses.com", "www.cinepolisindia.com"],
+      "could_not_verify": ["www.odeon.co.uk", "www.curzon.com", "www.pvrcinemas.com", "in.bookmyshow.com", "www.amctheatres.com", "www.regmovies.com", "www.cinemark.com"],
+      "notes": "No cinema site implements ScreeningEvent JSON-LD. Only Fandango has Movie JSON-LD. Industry-wide gap in structured data for showtimes."
+    },
+
+    "bot_protection_tiers": {
+      "accessible_no_protection": ["www.cineworld.co.uk", "www.myvue.com", "www.picturehouses.com", "www.everymancinema.com", "www.showcasecinemas.co.uk", "www.cinepolisindia.com"],
+      "moderate_protection": ["www.fandango.com"],
+      "aggressive_cloudflare": ["www.odeon.co.uk", "www.curzon.com", "in.bookmyshow.com", "www.regmovies.com", "www.cinemark.com"],
+      "aggressive_akamai": ["www.pvrcinemas.com"],
+      "queue_it_waiting_room": ["www.amctheatres.com"]
+    },
+
+    "recommended_approach_priority": [
+      "1. Fandango sitemap crawl for all US cinema data (45K movies, 3K theaters, JSON-LD)",
+      "2. Cineworld REST API for UK cinemas (119 locations, film events)",
+      "3. Vue cinemas API + SSR scrape for UK (90+ cinemas)",
+      "4. Cinepolis India SSR scrape via __NEXT_DATA__ for India movies",
+      "5. Everyman/Showcase/Picturehouses sitemap crawl for smaller UK chains",
+      "6. AMC sitemap + headless browser for US direct chain data",
+      "7. BookMyShow headless browser or mobile API for India aggregated data",
+      "8. Odeon/Curzon/PVR headless browser with proxy as last resort"
+    ]
+  }
+}
