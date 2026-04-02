@@ -1,187 +1,113 @@
 {
-  "ott_platforms": [
-    {
-      "name": "aha",
-      "domain": "www.aha.video",
-      "url": "https://www.aha.video",
-      "languages": ["te", "ta"],
-      "country": "IN",
-      "sitemap": "https://www.aha.video/sitemap/sitemapindex.xml",
-      "robots_txt": "https://www.aha.video/robots.txt",
-      "content_types": ["movie", "webseries", "webepisode"],
-      "structured_data": "json-ld (schema.org/VideoObject)",
-      "crawl_strategy": {
-        "method": "sitemap + polite",
-        "tool": "ottcrawl -platform aha",
-        "user_agent": "CrawlerBot/0.1",
-        "rate_limit": "3 req/s",
-        "data_extraction": "JSON-LD for movies (title, description, genre, year, cast, thumbnail). og:image for banner on all pages.",
-        "notes": "Language only available on movie pages (39%), not episodes. Episodes classified as 'show' via og:section meta."
-      },
-      "crawl_results": {
-        "last_crawled": "2026-03-19",
-        "movies": 1632,
-        "shows": 2938,
-        "webseries": 2,
-        "total": 4572,
-        "thumbnail_coverage": "100%",
-        "banner_coverage": "100%",
-        "failures": 0,
-        "output": "data/ott/aha.jsonl",
-        "r2_key": "ott/aha.jsonl"
-      },
-      "status": "done"
-    },
-    {
-      "name": "Hotstar (JioHotstar)",
-      "domain": "www.hotstar.com",
-      "url": "https://www.hotstar.com",
-      "languages": ["hi", "te", "ta", "ml", "kn", "bn", "mr", "en"],
-      "country": "IN",
-      "sitemap": "https://www.hotstar.com/in/new-sitemap.xml",
-      "robots_txt": "https://www.hotstar.com/robots.txt",
-      "content_types": ["movie", "show", "episode", "sport"],
-      "structured_data": "json-ld (schema.org/Movie, schema.org/TVSeries) — only served to Googlebot UA",
-      "crawl_strategy": {
-        "method": "sitemap URLs pre-fetched via curl (CDN caching issues with Go client), then crawled with urls-file",
-        "tool": "ottcrawl -platform hotstar -urls-file <pre-fetched-urls>",
-        "user_agent": "Googlebot/2.1 (required for SSR/JSON-LD)",
-        "rate_limit": "5 req/s",
-        "data_extraction": "JSON-LD has title, description, genre, year, language, duration, age_rating, thumbnail, image. Very clean structured data.",
-        "notes": "CDN (Akamai) caches sitemaps aggressively — sub-sitemaps sometimes return wrong content. Workaround: fetch sitemap URLs with curl (which gets correct response), save to file, then use -urls-file flag. Pages only serve JSON-LD to Googlebot UA; regular UA gets JS-rendered HTML with no structured data.",
-        "sitemap_sub_urls": {
-          "movies": "https://www.hotstar.com/in/new-sitemap-MOVIE-1.xml",
-          "shows": "https://www.hotstar.com/in/new-sitemap-SHOWS-1.xml",
-          "episodes": "https://www.hotstar.com/in/new-sitemap-EPISODE-{1..10}.xml"
-        }
-      },
-      "crawl_results": {
-        "last_crawled": "2026-03-19",
-        "movies": 6368,
-        "shows": 4791,
-        "total": 11159,
-        "thumbnail_coverage": "100%",
-        "banner_coverage": "100%",
-        "language_coverage": "100%",
-        "failures": 0,
-        "output": "data/ott/hotstar.jsonl",
-        "r2_key": "ott/hotstar.jsonl"
-      },
-      "status": "done"
-    },
-    {
-      "name": "Netflix",
-      "domain": "www.netflix.com",
-      "url": "https://www.netflix.com",
-      "languages": ["multi"],
-      "country": "US",
-      "sitemap": "",
-      "content_types": ["movie", "show"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — likely needs API or headless browser. Netflix heavily blocks crawlers.",
-        "notes": "Consider using uNoGS API or TMDB Netflix provider filter as alternative."
-      },
-      "status": "planned"
-    },
-    {
-      "name": "Amazon Prime Video",
-      "domain": "www.primevideo.com",
-      "url": "https://www.primevideo.com",
-      "languages": ["multi"],
-      "country": "US",
-      "sitemap": "",
-      "content_types": ["movie", "show"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — needs investigation. May have sitemaps or API.",
-        "notes": "Consider JustWatch API as alternative data source."
-      },
-      "status": "planned"
-    },
-    {
-      "name": "ZEE5",
-      "domain": "www.zee5.com",
-      "url": "https://www.zee5.com",
-      "languages": ["hi", "te", "ta", "ml", "kn", "bn", "mr", "en"],
-      "country": "IN",
-      "sitemap": "",
-      "content_types": ["movie", "show", "original"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — check robots.txt and sitemap availability"
-      },
-      "status": "planned"
-    },
-    {
-      "name": "SonyLIV",
-      "domain": "www.sonyliv.com",
-      "url": "https://www.sonyliv.com",
-      "languages": ["hi", "te", "ta", "ml", "en"],
-      "country": "IN",
-      "sitemap": "",
-      "content_types": ["movie", "show", "sport"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — check robots.txt and sitemap availability"
-      },
-      "status": "planned"
-    },
-    {
-      "name": "JioCinema",
-      "domain": "www.jiocinema.com",
-      "url": "https://www.jiocinema.com",
-      "languages": ["hi", "te", "ta", "ml", "kn", "en"],
-      "country": "IN",
-      "sitemap": "",
-      "content_types": ["movie", "show", "sport"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — check robots.txt and sitemap availability"
-      },
-      "status": "planned"
-    },
-    {
-      "name": "MX Player",
-      "domain": "www.mxplayer.in",
-      "url": "https://www.mxplayer.in",
-      "languages": ["hi", "te", "ta", "en"],
-      "country": "IN",
-      "sitemap": "",
-      "content_types": ["movie", "show", "music"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — check robots.txt and sitemap availability"
-      },
-      "status": "planned"
-    },
-    {
-      "name": "ETV Win",
-      "domain": "www.etvwin.com",
-      "url": "https://www.etvwin.com",
-      "languages": ["te"],
-      "country": "IN",
-      "sitemap": "",
-      "content_types": ["movie", "show"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — check robots.txt and sitemap availability"
-      },
-      "status": "planned"
-    },
-    {
-      "name": "Sun NXT",
-      "domain": "www.sunnxt.com",
-      "url": "https://www.sunnxt.com",
-      "languages": ["te", "ta", "ml", "kn"],
-      "country": "IN",
-      "sitemap": "",
-      "content_types": ["movie", "show"],
-      "structured_data": "unknown",
-      "crawl_strategy": {
-        "method": "TBD — check robots.txt and sitemap availability"
-      },
-      "status": "planned"
+  "ott_platforms": {
+    "global": [
+      {"name": "Netflix", "domain": "netflix.com", "crawlable": false, "strategy": "tmdb_watch_providers", "notes": "Blocks all crawlers. Use TMDB watch/providers API."},
+      {"name": "Amazon Prime Video", "domain": "primevideo.com", "crawlable": false, "strategy": "tmdb_watch_providers", "notes": "JS-rendered, auth required."},
+      {"name": "Disney+", "domain": "disneyplus.com", "crawlable": false, "strategy": "tmdb_watch_providers", "notes": "No sitemap, blocks crawlers."},
+      {"name": "Apple TV+", "domain": "tv.apple.com", "crawlable": false, "strategy": "tmdb_watch_providers"},
+      {"name": "Crunchyroll", "domain": "crunchyroll.com", "crawlable": "tbd", "strategy": "investigate"}
+    ],
+    "us": [
+      {"name": "Max (HBO)", "domain": "max.com", "crawlable": false, "strategy": "tmdb_watch_providers"},
+      {"name": "Hulu", "domain": "hulu.com", "crawlable": false, "strategy": "tmdb_watch_providers"},
+      {"name": "Peacock", "domain": "peacocktv.com", "crawlable": false, "strategy": "tmdb_watch_providers"},
+      {"name": "Paramount+", "domain": "paramountplus.com", "crawlable": false, "strategy": "tmdb_watch_providers"},
+      {"name": "Starz", "domain": "starz.com", "crawlable": false, "strategy": "tmdb_watch_providers"}
+    ],
+    "uk": [
+      {"name": "Now TV", "domain": "nowtv.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "BritBox", "domain": "britbox.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Sky Go", "domain": "sky.com", "crawlable": false, "strategy": "tmdb_watch_providers"},
+      {"name": "ITVX", "domain": "itv.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Channel 4", "domain": "channel4.com", "crawlable": "tbd", "strategy": "investigate"}
+    ],
+    "india": [
+      {"name": "JioHotstar", "domain": "www.hotstar.com", "crawlable": true, "strategy": "ottcrawl -platform hotstar", "status": "done", "movies": 6368, "shows": 4791},
+      {"name": "aha", "domain": "www.aha.video", "crawlable": true, "strategy": "ottcrawl -platform aha", "status": "done", "movies": 1632, "shows": 2938},
+      {"name": "ZEE5", "domain": "zee5.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "SonyLIV", "domain": "sonyliv.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "JioCinema", "domain": "jiocinema.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "MX Player", "domain": "mxplayer.in", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "ALTBalaji", "domain": "altbalaji.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "ETV Win", "domain": "etvwin.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Sun NXT", "domain": "sunnxt.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Lionsgate Play", "domain": "lionsgateplay.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Hoichoi", "domain": "hoichoi.tv", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Eros Now", "domain": "erosnow.com", "crawlable": "tbd", "strategy": "investigate"}
+    ],
+    "japan_korea": [
+      {"name": "Tving", "domain": "tving.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Coupang Play", "domain": "coupangplay.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Viki", "domain": "viki.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "DAZN", "domain": "dazn.com", "crawlable": "tbd", "strategy": "investigate"}
+    ],
+    "southeast_asia": [
+      {"name": "Viu", "domain": "viu.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "iQIYI", "domain": "iq.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "WeTV", "domain": "wetv.vip", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Vidio", "domain": "vidio.com", "crawlable": "tbd", "strategy": "investigate"}
+    ],
+    "middle_east": [
+      {"name": "OSN+", "domain": "osnplus.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Shahid", "domain": "shahid.mbc.net", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "StarzPlay Arabia", "domain": "starzplay.com", "crawlable": "tbd", "strategy": "investigate"}
+    ],
+    "latin_america": [
+      {"name": "Claro Video", "domain": "clarovideo.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Globoplay", "domain": "globoplay.globo.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Star+", "domain": "starplus.com", "crawlable": false, "strategy": "tmdb_watch_providers"}
+    ],
+    "europe": [
+      {"name": "Canal+", "domain": "canalplus.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Joyn", "domain": "joyn.de", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Filmin", "domain": "filmin.es", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "Mubi", "domain": "mubi.com", "crawlable": "tbd", "strategy": "investigate"}
+    ],
+    "africa": [
+      {"name": "Showmax", "domain": "showmax.com", "crawlable": "tbd", "strategy": "investigate"},
+      {"name": "iROKOtv", "domain": "irokotv.com", "crawlable": "tbd", "strategy": "investigate"}
+    ]
+  },
+  "cinema_chains": {
+    "uk": [
+      {"name": "Cineworld", "domain": "www.cineworld.co.uk", "strategy": "investigate"},
+      {"name": "Odeon", "domain": "www.odeon.co.uk", "strategy": "investigate"},
+      {"name": "Vue", "domain": "www.myvue.com", "strategy": "investigate"},
+      {"name": "Curzon", "domain": "www.curzon.com", "strategy": "investigate"},
+      {"name": "Picturehouse", "domain": "www.picturehouses.com", "strategy": "investigate"},
+      {"name": "Everyman", "domain": "www.everymancinema.com", "strategy": "investigate"},
+      {"name": "Showcase", "domain": "www.showcasecinemas.co.uk", "strategy": "investigate"}
+    ],
+    "india": [
+      {"name": "PVR INOX", "domain": "www.pvrcinemas.com", "strategy": "investigate"},
+      {"name": "Cinepolis India", "domain": "www.cinepolisindia.com", "strategy": "investigate"},
+      {"name": "BookMyShow", "domain": "www.bookmyshow.com", "strategy": "investigate", "notes": "Aggregator, not cinema chain. Unofficial APIs exist on GitHub."},
+      {"name": "Paytm Movies", "domain": "paytm.com/movies", "strategy": "investigate"}
+    ],
+    "us": [
+      {"name": "AMC Theatres", "domain": "www.amctheatres.com", "strategy": "investigate"},
+      {"name": "Regal", "domain": "www.regmovies.com", "strategy": "investigate"},
+      {"name": "Cinemark", "domain": "www.cinemark.com", "strategy": "investigate"},
+      {"name": "Fandango", "domain": "www.fandango.com", "strategy": "fandango_api", "notes": "Has official API. Covers all US theaters."}
+    ]
+  },
+  "showtime_apis": {
+    "description": "Third-party APIs that aggregate cinema showtimes globally. Better than crawling individual chains.",
+    "apis": [
+      {"name": "International Showtimes API", "url": "https://www.internationalshowtimes.com/showtimes-api", "coverage": "120+ countries, 25K+ cinemas", "notes": "Free trial available"},
+      {"name": "MovieGlu", "url": "https://developer.movieglu.com", "coverage": "125+ countries, 25K+ locations", "notes": "Requires API key, <500ms responses"},
+      {"name": "Fandango API", "url": "https://developer.fandango.com", "coverage": "US + Canada", "notes": "Showtimes updated every 6 hours"},
+      {"name": "Watchmode API", "url": "https://api.watchmode.com", "coverage": "200+ streaming services", "notes": "For OTT availability, not cinema showtimes"}
+    ]
+  },
+  "data_strategy": {
+    "ott_availability": "TMDB watch/providers API covers all major platforms (Netflix, Prime, Disney+, etc.) across 19 countries. Already fetched for 550K titles. Individual OTT crawlers only needed for regional platforms not in TMDB (aha, some Indian/Asian platforms).",
+    "cinema_showtimes": "Use International Showtimes API or MovieGlu for global coverage. Crawl individual chains only as fallback. Showtimes change daily — schedule crawl at 6 AM local time.",
+    "refresh_schedule": {
+      "ott_availability": "weekly (catalogs change slowly)",
+      "cinema_showtimes": "daily at 6 AM per timezone",
+      "tmdb_metadata": "monthly (movie data rarely changes)",
+      "ott_direct_crawl": "weekly (aha, hotstar catalog updates)"
     }
-  ]
+  }
 }
