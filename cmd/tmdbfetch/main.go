@@ -44,31 +44,7 @@ const (
 	movieAppend = "credits,keywords,similar,release_dates,alternative_titles,external_ids,videos,watch/providers"
 	tvAppend    = "credits,keywords,similar,alternative_titles,content_ratings,external_ids,videos,watch/providers"
 
-	maxCast = 20
 )
-
-// Crew jobs to keep — everything else is dropped.
-var keepCrewJobs = map[string]bool{
-	"Director":                  true,
-	"Writer":                    true,
-	"Screenplay":                true,
-	"Story":                     true,
-	"Producer":                  true,
-	"Executive Producer":        true,
-	"Director of Photography":   true,
-	"Cinematography":            true,
-	"Original Music Composer":   true,
-	"Music":                     true,
-	"Editor":                    true,
-}
-
-// Countries for watch providers.
-var targetCountries = map[string]bool{
-	"US": true, "GB": true, "CA": true, "AU": true, "NZ": true,
-	"IE": true, "ZA": true, "SG": true, "IN": true,
-	"DE": true, "FR": true, "JP": true, "KR": true, "BR": true,
-	"MX": true, "ES": true, "IT": true, "SE": true, "NL": true,
-}
 
 // --- Shared types ---
 
@@ -548,23 +524,17 @@ func parseMovie(id int, body []byte) (*MovieRecord, error) {
 		Crew:                parseCrew(raw.Credits.Crew),
 		Keywords:            raw.Keywords.Keywords,
 		Videos:              parseVideos(raw.Videos.Results),
-		WatchProviders:      filterProviders(raw.WatchProviders.Results),
+		WatchProviders:      parseProviders(raw.WatchProviders.Results),
 		FetchedAt:           time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Similar (top 10)
-	for i, s := range raw.Similar.Results {
-		if i >= 10 {
-			break
-		}
+	// Similar — all returned (TMDB caps at 20)
+	for _, s := range raw.Similar.Results {
 		m.Similar = append(m.Similar, SimilarTitle{ID: s.ID, Title: s.Title})
 	}
 
-	// Certifications (per-country, first non-empty per country)
+	// Certifications — all countries
 	for _, rd := range raw.ReleaseDates.Results {
-		if !targetCountries[rd.Country] {
-			continue
-		}
 		for _, r := range rd.Releases {
 			if r.Certification != "" {
 				m.Certifications = append(m.Certifications, Certification{
@@ -576,13 +546,8 @@ func parseMovie(id int, body []byte) (*MovieRecord, error) {
 		}
 	}
 
-	// Alternative titles (top 20)
-	for i, t := range raw.AlternativeTitles.Titles {
-		if i >= 20 {
-			break
-		}
-		m.AlternativeTitles = append(m.AlternativeTitles, t)
-	}
+	// Alternative titles — all
+	m.AlternativeTitles = raw.AlternativeTitles.Titles
 
 	// External IDs
 	ext := &ExternalIDs{
@@ -717,21 +682,18 @@ func parseTVShow(id int, body []byte) (*TVRecord, error) {
 		Crew:                parseCrew(raw.Credits.Crew),
 		Keywords:            raw.Keywords.Results,
 		Videos:              parseVideos(raw.Videos.Results),
-		WatchProviders:      filterProviders(raw.WatchProviders.Results),
+		WatchProviders:      parseProviders(raw.WatchProviders.Results),
 		FetchedAt:           time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Similar (top 10)
-	for i, s := range raw.Similar.Results {
-		if i >= 10 {
-			break
-		}
+	// Similar — all
+	for _, s := range raw.Similar.Results {
 		t.Similar = append(t.Similar, SimilarTitle{ID: s.ID, Title: s.Name})
 	}
 
-	// Certifications
+	// Certifications — all countries
 	for _, cr := range raw.ContentRatings.Results {
-		if targetCountries[cr.Country] && cr.Rating != "" {
+		if cr.Rating != "" {
 			t.Certifications = append(t.Certifications, Certification{
 				Country:       cr.Country,
 				Certification: cr.Rating,
@@ -739,13 +701,8 @@ func parseTVShow(id int, body []byte) (*TVRecord, error) {
 		}
 	}
 
-	// Alternative titles (top 20)
-	for i, at := range raw.AlternativeTitles.Results {
-		if i >= 20 {
-			break
-		}
-		t.AlternativeTitles = append(t.AlternativeTitles, at)
-	}
+	// Alternative titles — all
+	t.AlternativeTitles = raw.AlternativeTitles.Results
 
 	// External IDs
 	ext := &ExternalIDs{
@@ -766,10 +723,7 @@ func parseTVShow(id int, body []byte) (*TVRecord, error) {
 
 func parseCast(rawCast []json.RawMessage) []CastMember {
 	var cast []CastMember
-	for i, raw := range rawCast {
-		if i >= maxCast {
-			break
-		}
+	for _, raw := range rawCast {
 		var c CastMember
 		if json.Unmarshal(raw, &c) == nil && c.ID > 0 {
 			cast = append(cast, c)
@@ -782,18 +736,8 @@ func parseCrew(rawCrew []json.RawMessage) []CrewMember {
 	var crew []CrewMember
 	seen := make(map[string]bool) // dedup by id+job
 	for _, raw := range rawCrew {
-		var c struct {
-			ID          int    `json:"id"`
-			Name        string `json:"name"`
-			Job         string `json:"job"`
-			Department  string `json:"department"`
-			ProfilePath string `json:"profile_path"`
-			Gender      int    `json:"gender"`
-		}
+		var c CrewMember
 		if json.Unmarshal(raw, &c) != nil || c.ID == 0 {
-			continue
-		}
-		if !keepCrewJobs[c.Job] {
 			continue
 		}
 		key := fmt.Sprintf("%d:%s", c.ID, c.Job)
@@ -801,14 +745,7 @@ func parseCrew(rawCrew []json.RawMessage) []CrewMember {
 			continue
 		}
 		seen[key] = true
-		crew = append(crew, CrewMember{
-			ID:          c.ID,
-			Name:        c.Name,
-			Job:         c.Job,
-			Department:  c.Department,
-			ProfilePath: c.ProfilePath,
-			Gender:      c.Gender,
-		})
+		crew = append(crew, c)
 	}
 	return crew
 }
@@ -843,7 +780,7 @@ func parseVideos(rawVideos []struct {
 	return videos
 }
 
-func filterProviders(raw map[string]struct {
+func parseProviders(raw map[string]struct {
 	Flatrate []ProviderInfo `json:"flatrate"`
 	Rent     []ProviderInfo `json:"rent"`
 	Buy      []ProviderInfo `json:"buy"`
@@ -853,11 +790,8 @@ func filterProviders(raw map[string]struct {
 	if len(raw) == 0 {
 		return nil
 	}
-	result := make(map[string]CountryProviders)
+	result := make(map[string]CountryProviders, len(raw))
 	for country, data := range raw {
-		if !targetCountries[country] {
-			continue
-		}
 		result[country] = CountryProviders{
 			Flatrate: data.Flatrate,
 			Rent:     data.Rent,
@@ -865,9 +799,6 @@ func filterProviders(raw map[string]struct {
 			Free:     data.Free,
 			Ads:      data.Ads,
 		}
-	}
-	if len(result) == 0 {
-		return nil
 	}
 	return result
 }
