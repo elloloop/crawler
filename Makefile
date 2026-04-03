@@ -11,7 +11,7 @@ proto:
 
 # Build the binary
 build:
-	$(GO) build -o bin/$(BINARY) ./cmd/crawler
+	$(GO) build -o bin/$(BINARY) ./cmd/server
 
 # Run locally
 run: build
