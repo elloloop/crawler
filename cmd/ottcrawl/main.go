@@ -61,7 +61,25 @@ var platforms = map[string]*PlatformConfig{
 		Workers:        5,
 		UserAgent:      "Googlebot/2.1 (+http://www.google.com/bot.html)",
 		ContentPaths:   []string{"/movies/", "/shows/"},
-		SitemapFilters: []string{"MOVIE", "SHOWS"}, // only fetch movie and show sitemaps
+		SitemapFilters: []string{"MOVIE", "SHOWS"},
+	},
+	"zee5": {
+		Name:           "zee5",
+		SitemapURL:     "",
+		RatePerSec:     3,
+		Workers:        3,
+		UserAgent:      "Googlebot/2.1 (+http://www.google.com/bot.html)",
+		ContentPaths:   []string{"/movie", "/tvshow", "/original"},
+		SitemapFilters: []string{},
+	},
+	"sunnxt": {
+		Name:           "sunnxt",
+		SitemapURL:     "",
+		RatePerSec:     3,
+		Workers:        3,
+		UserAgent:      "Googlebot/2.1 (+http://www.google.com/bot.html)",
+		ContentPaths:   []string{"/movie", "/detail"},
+		SitemapFilters: []string{},
 	},
 }
 
