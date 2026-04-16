@@ -107,8 +107,17 @@ type UnifiedTitle struct {
 	WikiPlotSummary  string   `json:"wiki_plot_summary,omitempty"`
 	WikiCategories   []string `json:"wiki_categories,omitempty"`
 
+	// Wiki year-list data (fills gaps in TMDB)
+	WikiDirector     string   `json:"wiki_director,omitempty"`
+	WikiCast         []string `json:"wiki_cast,omitempty"`
+	WikiProdCompany  string   `json:"wiki_production_company,omitempty"`
+
 	// OTT
 	OTTPlatforms     []OTTInfo `json:"ott_platforms,omitempty"`
+
+	// Dedup metadata
+	DedupConfidence  float64  `json:"_dedup_confidence,omitempty"`
+	DedupMethod      string   `json:"_dedup_method,omitempty"`
 }
 
 type OTTInfo struct {
@@ -161,19 +170,24 @@ func main() {
 	ottData := loadOTTData()
 	log.Printf("  %d titles across platforms", len(ottData))
 
+	log.Println("Loading Wikipedia year-lists...")
+	wikiYearData := loadWikiYearLists()
+	log.Printf("  %d titles from year-lists", len(wikiYearData))
+
 	for _, langCode := range langs {
 		info := langConfig[langCode]
 		log.Printf("\n=== Processing %s (%s) ===", info.Name, langCode)
-		processLanguage(langCode, info, *outputDir, imdbRatings, wikiFilms, ottData)
+		processLanguage(langCode, info, *outputDir, imdbRatings, wikiFilms, wikiYearData, ottData)
 	}
 
 	log.Printf("\nAll done in %s", time.Since(start).Round(time.Second))
 }
 
-func processLanguage(langCode string, info langInfo, outputDir string, imdbRatings map[string][2]float64, wikiFilms []wikiFilm, ottData []ottEntry) {
-	unified := make(map[string]*UnifiedTitle) // key = normalized title::year
+func processLanguage(langCode string, info langInfo, outputDir string, imdbRatings map[string][2]float64, wikiFilms []wikiFilm, wikiYearData []wikiYearEntry, ottData []ottEntry) {
+	unified := make(map[string]*UnifiedTitle)
+	dedup := NewDeduplicator()
 
-	// 1. Load TMDB titles for this language
+	// 1. Load TMDB titles (primary source)
 	tmdbCount := 0
 	scanner := openJSONL("data/tmdb/movies_v2.jsonl")
 	for scanner.Scan() {
@@ -184,14 +198,17 @@ func processLanguage(langCode string, info langInfo, outputDir string, imdbRatin
 		}
 		tmdbCount++
 		title := strVal(m, "title")
+		origTitle := strVal(m, "original_title")
 		year := strVal(m, "release_date")
 		if len(year) >= 4 {
 			year = year[:4]
 		}
+		director := extractDirector(m)
+
 		key := normKey(title, year)
 		u := &UnifiedTitle{
 			Title:         title,
-			OriginalTitle: strVal(m, "original_title"),
+			OriginalTitle: origTitle,
 			Year:          year,
 			Language:      langCode,
 			LanguageName:  info.Name,
@@ -219,7 +236,6 @@ func processLanguage(langCode string, info langInfo, outputDir string, imdbRatin
 			Collection:    m["belongs_to_collection"],
 		}
 
-		// Add IMDb rating
 		if u.IMDBID != "" {
 			if r, ok := imdbRatings[u.IMDBID]; ok {
 				u.IMDBRating = r[0]
@@ -228,96 +244,45 @@ func processLanguage(langCode string, info langInfo, outputDir string, imdbRatin
 		}
 
 		unified[key] = u
+		dedup.Index(title, origTitle, year, director, key)
 	}
 	log.Printf("  TMDB: %d titles", tmdbCount)
 
-	// 2. Merge Wikipedia films
-	wikiMerged := 0
-	wikiNew := 0
+	// 2. Merge Wikipedia article films (multi-pass dedup)
+	wikiMerged, wikiNew := 0, 0
 	for _, wf := range wikiFilms {
 		if !matchesLang(wf.Categories, info.WikiKeywords) {
 			continue
 		}
-		key := normKey(wf.Title, wf.Year)
-		if u, exists := unified[key]; exists {
-			// Merge wiki data into existing
-			u.WikiPlotSummary = wf.PlotSummary
-			u.WikiURL = wf.URL
-			u.WikiCategories = wf.Categories
-			u.Sources = appendUnique(u.Sources, "wikipedia")
-			wikiMerged++
-		} else {
-			// Try fuzzy match
-			matched := false
-			cleanTitle := stripDisambig(wf.Title)
-			if cleanTitle != wf.Title {
-				altKey := normKey(cleanTitle, wf.Year)
-				if u, exists := unified[altKey]; exists {
-					u.WikiPlotSummary = wf.PlotSummary
-					u.WikiURL = wf.URL
-					u.WikiCategories = wf.Categories
-					u.Sources = appendUnique(u.Sources, "wikipedia")
-					wikiMerged++
-					matched = true
-				}
-			}
-			if !matched {
-				// New title not in TMDB
-				u := &UnifiedTitle{
-					Title:           wf.Title,
-					Year:            wf.Year,
-					Language:        langCode,
-					LanguageName:    info.Name,
-					Sources:         []string{"wikipedia"},
-					WikiPlotSummary: wf.PlotSummary,
-					WikiURL:         wf.URL,
-					WikiCategories:  wf.Categories,
-				}
-				unified[key] = u
-				wikiNew++
-			}
-		}
+		mergeWiki(unified, dedup, wf, langCode, info.Name, &wikiMerged, &wikiNew)
 	}
-	log.Printf("  Wiki: %d merged into TMDB, %d new titles", wikiMerged, wikiNew)
+	log.Printf("  Wiki articles: %d merged, %d new", wikiMerged, wikiNew)
 
-	// 3. Merge OTT data
-	ottMerged := 0
-	ottNew := 0
+	// 3. Merge Wikipedia year-list films (multi-pass dedup)
+	wyMerged, wyNew := 0, 0
+	for _, wy := range wikiYearData {
+		if !strings.EqualFold(wy.Language, info.Name) {
+			continue
+		}
+		mergeWikiYear(unified, dedup, wy, langCode, info.Name, &wyMerged, &wyNew)
+	}
+	log.Printf("  Wiki year-lists: %d merged, %d new", wyMerged, wyNew)
+
+	// 4. Merge OTT data (multi-pass dedup)
+	ottMerged, ottNew := 0, 0
 	for _, oe := range ottData {
 		if !matchesLangOTT(oe, info.OTTKeywords) {
 			continue
 		}
-		key := normKey(oe.Title, oe.Year)
-		oi := OTTInfo{
-			Platform:     oe.Platform,
-			URL:          oe.URL,
-			ThumbnailURL: oe.ThumbnailURL,
-			BannerURL:    oe.BannerURL,
-		}
-		if u, exists := unified[key]; exists {
-			u.OTTPlatforms = append(u.OTTPlatforms, oi)
-			u.Sources = appendUnique(u.Sources, oe.Platform)
-			ottMerged++
-		} else {
-			u := &UnifiedTitle{
-				Title:        oe.Title,
-				Year:         oe.Year,
-				Language:     langCode,
-				LanguageName: info.Name,
-				Sources:      []string{oe.Platform},
-				OTTPlatforms: []OTTInfo{oi},
-			}
-			unified[key] = u
-			ottNew++
-		}
+		mergeOTT(unified, dedup, oe, langCode, info.Name, &ottMerged, &ottNew)
 	}
-	log.Printf("  OTT: %d merged, %d new titles", ottMerged, ottNew)
+	log.Printf("  OTT: %d merged, %d new", ottMerged, ottNew)
 
-	// 4. Write output
+	// 5. Write output
 	outPath := filepath.Join(outputDir, info.Name+".jsonl")
 	f, err := os.Create(outPath)
 	if err != nil {
-		log.Printf("  Error creating output: %v", err)
+		log.Printf("  Error: %v", err)
 		return
 	}
 	defer f.Close()
@@ -326,16 +291,186 @@ func processLanguage(langCode string, info langInfo, outputDir string, imdbRatin
 	enc := json.NewEncoder(w)
 
 	sourceStats := map[string]int{}
+	dedupStats := map[string]int{}
 	for _, u := range unified {
 		enc.Encode(u)
 		for _, s := range u.Sources {
 			sourceStats[s]++
+		}
+		if u.DedupMethod != "" {
+			dedupStats[u.DedupMethod]++
 		}
 	}
 	w.Flush()
 
 	log.Printf("  Total: %d unique titles → %s", len(unified), outPath)
 	log.Printf("  Sources: %v", sourceStats)
+	if len(dedupStats) > 0 {
+		log.Printf("  Dedup matches: %v", dedupStats)
+	}
+}
+
+func mergeWiki(unified map[string]*UnifiedTitle, dedup *Deduplicator, wf wikiFilm, langCode, langName string, merged, newCount *int) {
+	key := normKey(wf.Title, wf.Year)
+
+	// Try multi-pass match
+	if u, exists := unified[key]; exists {
+		applyWikiToUnified(u, wf, 0.95, "exact")
+		*merged++
+		return
+	}
+
+	if match := dedup.Match(wf.Title, "", wf.Year, ""); match != nil {
+		if u, exists := unified[match.Key]; exists {
+			applyWikiToUnified(u, wf, match.Confidence, match.Method)
+			*merged++
+			return
+		}
+	}
+
+	// New title
+	u := &UnifiedTitle{
+		Title:           wf.Title,
+		Year:            wf.Year,
+		Language:        langCode,
+		LanguageName:    langName,
+		Sources:         []string{"wikipedia"},
+		WikiPlotSummary: wf.PlotSummary,
+		WikiURL:         wf.URL,
+		WikiCategories:  wf.Categories,
+	}
+	unified[key] = u
+	dedup.Index(wf.Title, "", wf.Year, "", key)
+	*newCount++
+}
+
+func mergeWikiYear(unified map[string]*UnifiedTitle, dedup *Deduplicator, wy wikiYearEntry, langCode, langName string, merged, newCount *int) {
+	year := strconv.Itoa(wy.Year)
+	key := normKey(wy.Title, year)
+
+	if u, exists := unified[key]; exists {
+		applyWikiYearToUnified(u, wy, 0.95, "exact")
+		*merged++
+		return
+	}
+
+	if match := dedup.Match(wy.Title, "", year, wy.Director); match != nil {
+		if u, exists := unified[match.Key]; exists {
+			applyWikiYearToUnified(u, wy, match.Confidence, match.Method)
+			*merged++
+			return
+		}
+	}
+
+	// New title
+	u := &UnifiedTitle{
+		Title:            wy.Title,
+		Year:             year,
+		Language:         langCode,
+		LanguageName:     langName,
+		Sources:          []string{"wikiyear"},
+		WikiDirector:     wy.Director,
+		WikiCast:         wy.Cast,
+		WikiProdCompany:  wy.ProductionCompany,
+	}
+	unified[key] = u
+	dedup.Index(wy.Title, "", year, wy.Director, key)
+	*newCount++
+}
+
+func mergeOTT(unified map[string]*UnifiedTitle, dedup *Deduplicator, oe ottEntry, langCode, langName string, merged, newCount *int) {
+	key := normKey(oe.Title, oe.Year)
+	oi := OTTInfo{
+		Platform:     oe.Platform,
+		URL:          oe.URL,
+		ThumbnailURL: oe.ThumbnailURL,
+		BannerURL:    oe.BannerURL,
+	}
+
+	if u, exists := unified[key]; exists {
+		u.OTTPlatforms = append(u.OTTPlatforms, oi)
+		u.Sources = appendUnique(u.Sources, oe.Platform)
+		*merged++
+		return
+	}
+
+	if match := dedup.Match(oe.Title, "", oe.Year, ""); match != nil {
+		if u, exists := unified[match.Key]; exists {
+			u.OTTPlatforms = append(u.OTTPlatforms, oi)
+			u.Sources = appendUnique(u.Sources, oe.Platform)
+			if u.DedupConfidence == 0 || match.Confidence > u.DedupConfidence {
+				u.DedupConfidence = match.Confidence
+				u.DedupMethod = match.Method
+			}
+			*merged++
+			return
+		}
+	}
+
+	u := &UnifiedTitle{
+		Title:        oe.Title,
+		Year:         oe.Year,
+		Language:     langCode,
+		LanguageName: langName,
+		Sources:      []string{oe.Platform},
+		OTTPlatforms: []OTTInfo{oi},
+	}
+	unified[key] = u
+	dedup.Index(oe.Title, "", oe.Year, "", key)
+	*newCount++
+}
+
+func applyWikiToUnified(u *UnifiedTitle, wf wikiFilm, confidence float64, method string) {
+	if wf.PlotSummary != "" && u.WikiPlotSummary == "" {
+		u.WikiPlotSummary = wf.PlotSummary
+	}
+	if wf.URL != "" {
+		u.WikiURL = wf.URL
+	}
+	if len(wf.Categories) > 0 {
+		u.WikiCategories = wf.Categories
+	}
+	u.Sources = appendUnique(u.Sources, "wikipedia")
+	if confidence < 0.95 {
+		u.DedupConfidence = confidence
+		u.DedupMethod = method
+	}
+}
+
+func applyWikiYearToUnified(u *UnifiedTitle, wy wikiYearEntry, confidence float64, method string) {
+	if wy.Director != "" && u.WikiDirector == "" {
+		u.WikiDirector = wy.Director
+	}
+	if len(wy.Cast) > 0 && len(u.WikiCast) == 0 {
+		u.WikiCast = wy.Cast
+	}
+	if wy.ProductionCompany != "" && u.WikiProdCompany == "" {
+		u.WikiProdCompany = wy.ProductionCompany
+	}
+	u.Sources = appendUnique(u.Sources, "wikiyear")
+	if confidence < 0.95 {
+		u.DedupConfidence = confidence
+		u.DedupMethod = method
+	}
+}
+
+func extractDirector(m map[string]any) string {
+	crew, ok := m["crew"].([]any)
+	if !ok {
+		return ""
+	}
+	for _, c := range crew {
+		cm, ok := c.(map[string]any)
+		if !ok {
+			continue
+		}
+		if job, _ := cm["job"].(string); job == "Director" {
+			if name, _ := cm["name"].(string); name != "" {
+				return name
+			}
+		}
+	}
+	return ""
 }
 
 // --- Data loaders ---
@@ -376,6 +511,47 @@ func loadWikiFilms() []wikiFilm {
 		f.Close()
 	}
 	return films
+}
+
+type wikiYearEntry struct {
+	Title             string
+	Year              int
+	Language          string
+	Director          string
+	Cast              []string
+	ProductionCompany string
+}
+
+func loadWikiYearLists() []wikiYearEntry {
+	var entries []wikiYearEntry
+	files, _ := filepath.Glob("data/wikiyear/*.jsonl")
+	for _, path := range files {
+		f, err := os.Open(path)
+		if err != nil {
+			continue
+		}
+		scanner := bufio.NewScanner(f)
+		scanner.Buffer(make([]byte, 1<<20), 1<<20)
+		for scanner.Scan() {
+			var r struct {
+				Title             string   `json:"title"`
+				Year              int      `json:"year"`
+				Language          string   `json:"language"`
+				Director          string   `json:"director"`
+				Cast              []string `json:"cast"`
+				ProductionCompany string   `json:"production_company"`
+			}
+			json.Unmarshal(scanner.Bytes(), &r)
+			if r.Title != "" {
+				entries = append(entries, wikiYearEntry{
+					Title: r.Title, Year: r.Year, Language: r.Language,
+					Director: r.Director, Cast: r.Cast, ProductionCompany: r.ProductionCompany,
+				})
+			}
+		}
+		f.Close()
+	}
+	return entries
 }
 
 func loadIMDBRatings() map[string][2]float64 {
