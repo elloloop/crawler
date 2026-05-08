@@ -308,10 +308,10 @@ func writeRecords(path string, allPages map[int64]*MovieRecord, recType string) 
 type apiResponse struct {
 	Query struct {
 		Pages map[string]struct {
-			PageID  int64  `json:"pageid"`
-			Title   string `json:"title"`
-			Missing bool   `json:"missing,omitempty"`
-			LastRev int64  `json:"lastrevid,omitempty"`
+			PageID  int64           `json:"pageid"`
+			Title   string          `json:"title"`
+			Missing json.RawMessage `json:"missing,omitempty"`
+			LastRev int64           `json:"lastrevid,omitempty"`
 			Revisions []struct {
 				Slots struct {
 					Main struct {
@@ -394,7 +394,7 @@ func fetchInfoBatch(ids []int64) (map[int64]int64, []int64) {
 	revids := make(map[int64]int64)
 	var missing []int64
 	for _, p := range resp.Query.Pages {
-		if p.Missing {
+		if len(p.Missing) > 0 {
 			if p.PageID > 0 {
 				missing = append(missing, p.PageID)
 			}
@@ -473,7 +473,7 @@ func fetchTextBatch(ids []int64) []MovieRecord {
 
 	var records []MovieRecord
 	for _, p := range resp.Query.Pages {
-		if p.Missing || len(p.Revisions) == 0 {
+		if len(p.Missing) > 0 || len(p.Revisions) == 0 {
 			continue
 		}
 		text := p.Revisions[0].Slots.Main.Content
